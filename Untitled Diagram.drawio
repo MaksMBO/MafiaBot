@@ -1,6 +1,6 @@
-<mxfile host="app.diagrams.net" modified="2021-11-16T07:48:25.814Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 OPR/80.0.4170.63" etag="4QPq6G4tgbzpcpRXPoge" version="15.7.1" type="github">
+<mxfile host="app.diagrams.net" modified="2021-11-17T07:47:33.533Z" agent="5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36 OPR/80.0.4170.63" etag="njlkNRjDLpIcj6s5f-z2" version="15.7.1" type="github">
   <diagram id="ALGK_6w9bily_czKKvVn" name="Page-1">
-    <mxGraphModel dx="998" dy="548" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
+    <mxGraphModel dx="1456" dy="645" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="827" pageHeight="1169" math="0" shadow="0">
       <root>
         <mxCell id="0" />
         <mxCell id="1" parent="0" />
@@ -125,7 +125,7 @@
         <mxCell id="CYoyYTOHA0EDDvnXfknv-106" value="Загрузити фото" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="410" y="170" width="120" height="30" as="geometry" />
         </mxCell>
-        <mxCell id="CYoyYTOHA0EDDvnXfknv-107" value="Загруити відео" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
+        <mxCell id="CYoyYTOHA0EDDvnXfknv-107" value="Загрузити відео" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
           <mxGeometry x="440" y="210" width="120" height="30" as="geometry" />
         </mxCell>
         <mxCell id="CYoyYTOHA0EDDvnXfknv-108" value="Встановити геолокацію" style="ellipse;whiteSpace=wrap;html=1;" vertex="1" parent="1">
