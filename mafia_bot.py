@@ -45,13 +45,18 @@ async def aboba(message: types.Message):
 @dp.message_handler(commands=['start'], state=None)
 async def send_welcome_message(message: types.Message):
     await My_states.START.set()
-    await bot.send_message(message.from_user.id, "Hi! {0.first_name}, 🕴️ I'm mafia bot ".format(message.from_user),
-                           reply_markup=markup.inline_keyboard_start)
-    with open('users.json', 'r') as f:
-        users = json.load(f)
-    await update_data(users, message.from_user)
-    with open('users.json', 'w') as f:
-        json.dump(users, f, indent=4)
+    if message.chat.id > 0:
+        await bot.send_message(message.from_user.id, "Hi! {0.first_name}, 🕴️ I'm mafia bot ".format(message.from_user),
+                               reply_markup=markup.inline_keyboard_start)
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+        await update_data(users, message.from_user)
+        with open('users.json', 'w') as f:
+            json.dump(users, f, indent=4)
+    else:
+        await bot.send_message(message.from_user.id, "a".format(message.from_user))
+
+
 
 
 @dp.callback_query_handler(text="Profile🤵🏻", state=My_states.START)
