@@ -4,20 +4,19 @@ from aiogram import Bot, Dispatcher, executor, types
 import markup
 import json
 
-from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
 
-# from aiogram.utils.helper import Helper, HelperMode, ListItem
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
+ind = 0
 
 
 class My_states(StatesGroup):
     START = State()
-    # MENU = State()
+    JOIN = State()
 
 
 async def update_data(users, user):
@@ -32,21 +31,37 @@ async def add_games_played(users, user, game_result):
     users[str(user.id)][game_result] += 1
 
 
-@dp.message_handler(commands=['game'])
+players_joined = []
+
+
+@dp.message_handler(commands=['game'], state='*')
 async def send_invite(message: types.Message):
-    await message.reply("Registration is open", reply_markup=markup.inline_keyboard_join)
+    if message.chat.id < 0:
+        # await My_states.JOIN.set()
+        await message.reply("Registration is open", reply_markup=markup.inline_keyboard_join)
+    # await bot.send_message(message.from_user.id, "Press JOIN to join the game".format(message.from_user),
+    #                        reply_markup=markup.join_keyboard)
 
 
-@dp.message_handler(commands=['start'], state=My_states.START)
-async def aboba(message: types.Message):
-    await bot.send_message(message.from_user.id, "a".format(message.from_user))
+@dp.message_handler()
+async def creating_button_join(message: types.Message):
+    if message.text == "Join game 🔗":
+        if message.from_user.id in players_joined:
+            await bot.send_message(message.from_user.id,
+                                   "You are already registered, just wait⌛️")
+        else:
+            await bot.send_message(message.from_user.id,
+                                   "You have registered in the game, wait for the start✅")
+            players_joined.append(message.from_user.id)
+    print(players_joined)
+    await message.delete()
 
 
-@dp.message_handler(commands=['start'], state=None)
+@dp.message_handler(commands=['start'], state='*')
 async def send_welcome_message(message: types.Message):
     await My_states.START.set()
     if message.chat.id > 0:
-        await bot.send_message(message.from_user.id, "Hi! {0.first_name}, 🕴️ I'm mafia bot ".format(message.from_user),
+        await bot.send_message(message.from_user.id, "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
                                reply_markup=markup.inline_keyboard_start)
         with open('users.json', 'r') as f:
             users = json.load(f)
@@ -57,6 +72,10 @@ async def send_welcome_message(message: types.Message):
         await bot.send_message(message.from_user.id, "a".format(message.from_user))
 
 
+@dp.callback_query_handler(text="qwe")
+async def creating_buttons(call: types.CallbackQuery):
+    await bot.send_message(call.from_user.id, "Press JOIN to join the game".format(call.from_user),
+                           reply_markup=markup.join_keyboard, parse_mode="Markdown")
 
 
 @dp.callback_query_handler(text="Profile🤵🏻", state=My_states.START)
