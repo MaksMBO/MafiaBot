@@ -59,6 +59,10 @@ async def registration(message: types.Message):
         players_joined["time_remaining"] = 60
         is_registration = False
 
+        information = {"chat_id": players_joined["chat_id"], "players": []}
+        with open("registration.json", 'w') as file:
+            json.dump(information, file, indent=4)
+
         await bot.send_message(message.chat.id, "Time until the end of registration 60 seconds")
         while players_joined["time_remaining"] > 0:
             players_joined["time_remaining"] -= 1
@@ -90,6 +94,7 @@ async def timer_extend(call: types.CallbackQuery):
 async def send_welcome_message(message: types.Message):
     if message.chat.id > 0:
         if message.get_args() == 'a':
+
             if players_joined["time_remaining"] == 0:
                 await bot.send_message(message.from_user.id, "There is no game registered")
             elif message.from_user in players_joined["players"]:
@@ -100,7 +105,13 @@ async def send_welcome_message(message: types.Message):
                                        "You have registered in the game, wait for the start✅")
 
                 players_joined["players"].append(message.from_user)
-                print(players_joined["players"])
+
+                with open("registration.json", 'r') as file:
+                    information = json.load(file)
+                information["players"].append(dict(message.from_user))
+                with open("registration.json", 'w') as file:
+                    json.dump(information, file, indent=4)
+
                 global note
                 if len(players_joined["players"]) == 1:
                     note = await bot.send_message(players_joined["chat_id"],
@@ -113,11 +124,7 @@ async def send_welcome_message(message: types.Message):
             await bot.send_message(message.from_user.id,
                                    "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
                                    reply_markup=markup.inline_keyboard_start)
-            with open('users.json', 'r') as f:
-                users = json.load(f)
-            await update_data(users, message.from_user)
-            with open('users.json', 'w') as f:
-                json.dump(users, f, indent=4)
+
         await message.delete()
     else:
         if await check_admin(message.chat.id, bot.id):
@@ -126,7 +133,7 @@ async def send_welcome_message(message: types.Message):
                 await asyncio.sleep(5)
                 await error.delete()
 
-            elif len(players_joined["players"]) > 4:
+            elif len(players_joined["players"]) > 0:
                 players_joined["time_remaining"] = 0
             else:
                 error = await bot.send_message(message.chat.id, "A minimum of four users must be registered to stop"
