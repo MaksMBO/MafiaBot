@@ -133,7 +133,7 @@ async def send_welcome_message(message: types.Message):
                 await asyncio.sleep(5)
                 await error.delete()
 
-            elif len(players_joined["players"]) > 0:
+            elif len(players_joined["players"]) >= 4:
                 players_joined["time_remaining"] = 0
             else:
                 error = await bot.send_message(message.chat.id, "A minimum of four users must be registered to stop"
