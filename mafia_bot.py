@@ -24,7 +24,6 @@ async def check_admin(chat_id, bot_id):
             and bot_permission["can_manage_voice_chats"] and bot_permission["can_pin_messages"]:
         return True
     await bot.send_message(chat_id, """"Administrator rights have not been granted 
-
 To start the game give me the following administrator rights: 
 ☑️ delete messages 
 ☑️ block users 
@@ -54,8 +53,9 @@ async def registration(message: types.Message):
         global players_joined
         await message.reply("Registration is open", reply_markup=markup.inline_keyboard_join)
         players_joined["chat_id"] = message.chat.id
-        players_joined["players_id"] = []
-        players_joined["players_name"] = []
+        # players_joined["players_id"] = []
+        # players_joined["players_name"] = []
+        players_joined["players"] = []
         players_joined["time_remaining"] = 60
         is_registration = False
 
@@ -68,7 +68,7 @@ async def registration(message: types.Message):
         await bot.send_message(message.chat.id, "Registration is over")
         global game
         game = True
-        if len(players_joined["players_id"]) < 4:
+        if len(players_joined["players"]) < 4:
             await bot.send_message(message.chat.id, "Not enough players to start the game...")
             players_joined.clear()
             is_registration = True
@@ -76,7 +76,7 @@ async def registration(message: types.Message):
 
 @dp.callback_query_handler(text="+30s")
 async def timer_extend(call: types.CallbackQuery):
-    if len(players_joined["players_id"]) > 1:
+    if len(players_joined["players"]) > 1:
         players_joined["time_remaining"] += 30
         await bot.send_message(call.message.chat.id,
                                f"Added +30 seconds to the duration of registration. Time left till the game begins: "
@@ -92,23 +92,23 @@ async def send_welcome_message(message: types.Message):
         if message.get_args() == 'a':
             if players_joined["time_remaining"] == 0:
                 await bot.send_message(message.from_user.id, "There is no game registered")
-            elif message.from_user.id in players_joined["players_id"]:
+            elif message.from_user in players_joined["players"]:
                 await bot.send_message(message.from_user.id,
                                        "You are already registered, just wait⌛️")
             else:
                 await bot.send_message(message.from_user.id,
                                        "You have registered in the game, wait for the start✅")
 
-                players_joined["players_id"].append(message.from_user.id)
-                players_joined["players_name"].append(message.from_user.username)
+                players_joined["players"].append(message.from_user)
+                print(players_joined["players"])
                 global note
-                if len(players_joined["players_id"]) == 1:
+                if len(players_joined["players"]) == 1:
                     note = await bot.send_message(players_joined["chat_id"],
                                                   "*Registration is in progress*\n\nRegistered:\n@" + "\n@".join(
-                                                      map(str, players_joined["players_name"])))
+                                                      map(str, (x.username for x in players_joined["players"]))))
                 else:
                     await note.edit_text("*Registration is in progress*\n\nRegistered:\n@" + "\n@".join(
-                        map(str, players_joined["players_name"])))
+                        map(str, (x.username for x in players_joined["players"]))))
         else:
             await bot.send_message(message.from_user.id,
                                    "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
@@ -126,7 +126,7 @@ async def send_welcome_message(message: types.Message):
                 await asyncio.sleep(5)
                 await error.delete()
 
-            elif len(players_joined["players_name"]) > 4:
+            elif len(players_joined["players"]) > 4:
                 players_joined["time_remaining"] = 0
             else:
                 error = await bot.send_message(message.chat.id, "A minimum of four users must be registered to stop"
