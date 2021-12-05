@@ -17,6 +17,21 @@ game = False
 note = None
 
 
+async def check_admin(chat_id, bot_id):
+    bot_permission = await bot.get_chat_member(chat_id, bot_id)
+    if bot_permission['status'] == "administrator" and bot_permission["can_manage_chat"] \
+            and bot_permission["can_delete_messages"] and bot_permission["can_restrict_members"] \
+            and bot_permission["can_manage_voice_chats"] and bot_permission["can_pin_messages"]:
+        return True
+    await bot.send_message(chat_id, """"Administrator rights have not been granted 
+
+To start the game give me the following administrator rights: 
+☑️ delete messages 
+☑️ block users 
+☑️ pin messages""")
+    return False
+
+
 async def update_data(users, user):
     if str(user.id) not in users:
         users[user.id] = {}
@@ -33,9 +48,9 @@ players_joined = {}
 
 
 @dp.message_handler(commands=['game'])
-async def send_invite(message: types.Message):
+async def registration(message: types.Message):
     global is_registration
-    if message.chat.id < 0 and is_registration:
+    if message.chat.id < 0 and is_registration and await check_admin(message.chat.id, bot.id):
         global players_joined
         await message.reply("Registration is open", reply_markup=markup.inline_keyboard_join)
         players_joined["chat_id"] = message.chat.id
@@ -105,18 +120,20 @@ async def send_welcome_message(message: types.Message):
                 json.dump(users, f, indent=4)
         await message.delete()
     else:
-        if len(players_joined) == 0:
-            error = await bot.send_message(message.chat.id, "Registration is not started now")
-            await asyncio.sleep(5)
-            await error.delete()
-        elif len(players_joined["players_name"]) > 4:
-            players_joined["time_remaining"] = 0
-        else:
-            error = await bot.send_message(message.from_user.id, "A minimum of four users must be registered to stop"
-                                                                 " the timer")
-            await asyncio.sleep(10)
-            await error.delete()
-        await message.delete()
+        if await check_admin(message.chat.id, bot.id):
+            if len(players_joined) == 0:
+                error = await bot.send_message(message.chat.id, "Registration is not started now")
+                await asyncio.sleep(5)
+                await error.delete()
+
+            elif len(players_joined["players_name"]) > 4:
+                players_joined["time_remaining"] = 0
+            else:
+                error = await bot.send_message(message.chat.id, "A minimum of four users must be registered to stop"
+                                                                " the timer")
+                await asyncio.sleep(10)
+                await error.delete()
+            await message.delete()
 
 
 @dp.callback_query_handler(text="Profile🤵🏻")
