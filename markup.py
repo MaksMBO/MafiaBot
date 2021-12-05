@@ -1,9 +1,9 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 
 """INLINE KEYBOARD BUTTONS"""
-inline_button_go = InlineKeyboardButton("Go", url='https://t.me/CeeebBot?start=a')
-inline_keyboard_join = InlineKeyboardMarkup(row_width=2).add(inline_button_go)
-
+inline_button_start = InlineKeyboardButton("Join🤵🏻", callback_data="qwe")
+inline_button_go = InlineKeyboardButton("Go", url='https://t.me/CeeebBot')
+inline_keyboard_join = InlineKeyboardMarkup(row_width=2).add(inline_button_start, inline_button_go)
 
 inline_button_profile = InlineKeyboardButton('Profile🤵🏻', callback_data='Profile🤵🏻')
 inline_button_help = InlineKeyboardButton('Help', callback_data='Help')
