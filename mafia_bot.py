@@ -6,6 +6,8 @@ import json
 import asyncio
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 
+from Game import Games
+
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.TOKEN)
 dp = Dispatcher(bot, storage=MemoryStorage())
@@ -13,8 +15,8 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 MESSAGE_ID_NOTE = types.Message
 
 is_registration = True
-game = False
 note = None
+game = True
 
 
 async def check_admin(chat_id, bot_id):
@@ -59,10 +61,6 @@ async def registration(message: types.Message):
         players_joined["time_remaining"] = 60
         is_registration = False
 
-        information = {"chat_id": players_joined["chat_id"], "players": []}
-        with open("registration.json", 'w') as file:
-            json.dump(information, file, indent=4)
-
         await bot.send_message(message.chat.id, "Time until the end of registration 60 seconds")
         while players_joined["time_remaining"] > 0:
             players_joined["time_remaining"] -= 1
@@ -70,12 +68,31 @@ async def registration(message: types.Message):
                 await bot.send_message(message.chat.id, "Time until the end of registration 30 seconds")
             await asyncio.sleep(1)
         await bot.send_message(message.chat.id, "Registration is over")
-        global game
-        game = True
         if len(players_joined["players"]) < 4:
             await bot.send_message(message.chat.id, "Not enough players to start the game...")
             players_joined.clear()
             is_registration = True
+        else:
+            await bot.send_message(message.chat.id, "*GAME IS STARTED*", parse_mode="Markdown")
+            this_game = Games(players_joined)
+            if message.from_user not in players_joined["players"]:
+                await message.delete()
+            await this_game.give_roles()
+            #######################
+
+            await this_game.mafia_game()
+            global game
+            game = this_game.game
+
+            @dp.message_handler()
+            async def chat_moderating(mes: types.Message):
+                global game
+
+                if mes.from_user.id not in this_game.players_roles.keys():  # пропиши: and game
+                    await mes.delete()
+            ######################
+            # await this_game.night()
+            # # await this_game.day()
 
 
 @dp.callback_query_handler(text="+30s")
@@ -105,12 +122,6 @@ async def send_welcome_message(message: types.Message):
                                        "You have registered in the game, wait for the start✅")
 
                 players_joined["players"].append(message.from_user)
-
-                with open("registration.json", 'r') as file:
-                    information = json.load(file)
-                information["players"].append(dict(message.from_user))
-                with open("registration.json", 'w') as file:
-                    json.dump(information, file, indent=4)
 
                 global note
                 if len(players_joined["players"]) == 1:
