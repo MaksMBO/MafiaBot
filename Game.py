@@ -17,6 +17,7 @@ class Games:
         self.players_roles = {}
         self.game = True
         self.mafia_players = []
+        self.mafia_civilians = []
 
     async def give_roles(self):
         """
@@ -52,14 +53,17 @@ class Games:
                 await bot.send_message(role.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
                                                              "The main city protector and the thunderstorm of "
                                                              "the mafia ...", parse_mode="Markdown")
+                self.mafia_civilians.append(role.user_profile)
             elif isinstance(role, Medic):
                 await bot.send_message(role.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
                                                              "You decide who to save tonight ...",
                                        parse_mode="Markdown")
+                self.mafia_civilians.append(role.user_profile)
             elif isinstance(role, Civilian):
                 await bot.send_message(role.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
                                                              "Your task is to find the mafia and lynch the murderers "
                                                              "at the city meeting!", parse_mode="Markdown")
+                self.mafia_civilians.append(role.user_profile)
 
     async def day(self):
         """
