@@ -78,7 +78,7 @@ async def registration(message: types.Message):
             if message.from_user not in players_joined["players"]:
                 await message.delete()
             await this_game.give_roles()
-            #######################
+            #############################################################@##############################################
 
             await this_game.mafia_game()
             global game
@@ -90,7 +90,7 @@ async def registration(message: types.Message):
 
                 if mes.from_user.id not in this_game.players_roles.keys():  # пропиши: and game
                     await mes.delete()
-            ######################
+            ############################################################################################################
             # await this_game.night()
             # # await this_game.day()
 
@@ -126,8 +126,8 @@ async def send_welcome_message(message: types.Message):
                 global note
                 if len(players_joined["players"]) == 1:
                     note = await bot.send_message(players_joined["chat_id"],
-                                                  "*Registration is in progress*\n\nRegistered:\n@" + "\n@".join(
-                                                      map(str, (x.username for x in players_joined["players"]))))
+                                                  "*Registration is in progress*\n\nRegistered:\n@" +
+                                                  "\n@".join(map(str, (x.username for x in players_joined["players"]))))
                 else:
                     await note.edit_text("*Registration is in progress*\n\nRegistered:\n@" + "\n@".join(
                         map(str, (x.username for x in players_joined["players"]))))

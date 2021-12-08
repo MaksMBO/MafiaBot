@@ -7,7 +7,6 @@ from aiogram import Bot, Dispatcher, executor, types
 import config
 import logging
 
-
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.TOKEN)
 
@@ -17,7 +16,7 @@ class Games:
         self.players_info = players_info
         self.players_roles = {}
         self.game = True
-        # self.__dict__ = d
+        self.mafia_players = []
 
     async def give_roles(self):
         """
@@ -47,6 +46,8 @@ class Games:
                 await bot.send_message(role.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
                                                              "Your task is to obey Don and kill everyone who stands "
                                                              "in your way.", parse_mode="Markdown")
+                self.mafia_players.append(role.user_profile)
+
             elif isinstance(role, Police):
                 await bot.send_message(role.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
                                                              "The main city protector and the thunderstorm of "
@@ -112,12 +113,12 @@ class Games:
 
     async def mafia_game(self):
 
-
         # if message.from_user.id not in self.players_roles.keys():
         #     await message.delete()
-
+        for mafia in self.mafia_players:
+            await bot.send_message(mafia.id, "Remember your allies: \n@" + "\n@".join(
+                map(str, (x.username + "- 🤵🏼 Mafia" for x in self.mafia_players))))
         while self.game:
             await self.night()
             await self.day()
             self.game = False
-
