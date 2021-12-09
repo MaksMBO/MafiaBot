@@ -81,33 +81,30 @@ class Games:
                                                                             "heads in the"
                                                                             " morning ...",
                                  reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown")
-        for mafia in self.mafia_players:
-            # self.button = InlineKeyboardButton(f'{self.user_profile.first_name} {self.user_profile.last_name}',
-            #                                 callback_data=user_profile.id)
-            keyboard = InlineKeyboardMarkup(row_width=1)
-            for civilian in self.civilian_players:
-                keyboard.add(civilian.button)
-            await bot.send_message(mafia.user_profile.id, "*It's time to kill!*\nChoose a victim ", reply_markup=keyboard,
-                                   parse_mode="Markdown")
 
-    # написать в личку мафии, что наступила ночь, и оповестить его о его союзниках
-    # for role in self.players_roles.values():
-    #     if isinstance(role, Mafia):
-    #         await bot.send_message(role.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
-    #                                                      "Your task is to obey Don and kill everyone who stands "
-    #                                                      "in your way.", parse_mode="Markdown")
-    #     elif isinstance(role, Police):
-    #         await bot.send_message(role.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
-    #                                                      "The main city protector and the thunderstorm of "
-    #                                                      "the mafia ...", parse_mode="Markdown")
-    #     elif isinstance(role, Medic):
-    #         await bot.send_message(role.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
-    #                                                      "You decide who to save tonight ...",
-    #                                parse_mode="Markdown")
-    #     elif isinstance(role, Civilian):
-    #         await bot.send_message(role.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
-    #                                                      "Your task is to find the mafia and lynch the murderers "
-    #                                                      "at the city meeting!", parse_mode="Markdown")
+        medic = 0
+        police = 0
+        keyboard_players = InlineKeyboardMarkup(row_width=1)
+        keyboard = InlineKeyboardMarkup(row_width=1)
+        keyboard_for_police = InlineKeyboardMarkup(row_width=1)
+        for civilian in self.civilian_players:
+            keyboard.add(civilian.button)
+            keyboard_players.add(civilian.button)
+            if isinstance(civilian, Medic):
+                medic = civilian
+            if not isinstance(civilian, Police):
+                keyboard_for_police.add(civilian.button)
+            else:
+                police = civilian
+        for mafia in self.mafia_players:
+            keyboard_players.add(mafia.button)
+            keyboard_for_police.add(mafia.button)
+            await bot.send_message(mafia.user_profile.id, "*It's time to kill!*\nChoose a victim ",
+                                   reply_markup=keyboard, parse_mode="Markdown")
+        await bot.send_message(medic.user_profile.id, "*Who will you heal?*\nChoose a patient",
+                               reply_markup=keyboard_players, parse_mode="Markdown")
+        await bot.send_message(police.user_profile.id, "*Choose who you want to check tonight.*\nChoose suspect:",
+                               reply_markup=keyboard_for_police, parse_mode="Markdown")
 
     async def mafia_game(self):
         # if message.from_user.id not in self.players_roles.keys():
