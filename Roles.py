@@ -1,10 +1,26 @@
+from aiogram import Bot, Dispatcher, executor, types
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+import config
+import logging
+
+logging.basicConfig(level=logging.INFO)
+bot = Bot(token=config.TOKEN)
+
+
 class Civilian:
     def __init__(self, user_profile):
         self.user_profile = user_profile
         self.is_dead = False  # boolean is player alive or dead
-        # self.is_mafia = False  # boolean is player mafia or not # We will use isinstance
-        self.has_night_action = False  # boolean is role has night action or not
         self.another_player_id = 0
+        self.button = InlineKeyboardButton(
+            f'{self.user_profile.first_name if self.user_profile.first_name else ""} '
+            f'{self.user_profile.last_name if self.user_profile.last_name else ""}',
+            callback_data=user_profile.id)
+
+    async def send_message(self):
+        await bot.send_message(self.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
+                                                     "Your task is to find the mafia and lynch the murderers "
+                                                     "at the city meeting!", parse_mode="Markdown")
 
     def day(self, user_profile):
         pass
@@ -13,7 +29,11 @@ class Civilian:
 class Mafia(Civilian):
     def __init__(self, user_profile):
         super().__init__(user_profile)
-        self.has_night_action = True
+
+    async def send_message(self):
+        await bot.send_message(self.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
+                                                     "Your task is to obey Don and kill everyone who stands "
+                                                     "in your way.", parse_mode="Markdown")
 
     async def night(self, info_for_chat):
         # написать пересылку сообщений, и кто кого убил
@@ -23,7 +43,11 @@ class Mafia(Civilian):
 class Medic(Civilian):
     def __init__(self, user_profile):
         super().__init__(user_profile)
-        self.has_night_action = True
+
+    async def send_message(self):
+        await bot.send_message(self.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
+                                                     "You decide who to save tonight ...",
+                               parse_mode="Markdown")
 
     async def night(self, info_for_chat):
         pass
@@ -32,7 +56,11 @@ class Medic(Civilian):
 class Police(Civilian):
     def __init__(self, user_profile):
         super().__init__(user_profile)
-        self.has_night_action = True
+
+    async def send_message(self):
+        await bot.send_message(self.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
+                                                     "The main city protector and the thunderstorm of "
+                                                     "the mafia ...", parse_mode="Markdown")
 
     async def night(self, info_for_chat):
         pass

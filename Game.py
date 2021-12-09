@@ -2,6 +2,7 @@ import random
 import math
 
 import markup
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 from Roles import Mafia, Police, Medic, Civilian
 from aiogram import Bot, Dispatcher, executor, types
 import config
@@ -17,7 +18,7 @@ class Games:
         self.players_roles = {}
         self.game = True
         self.mafia_players = []
-        self.mafia_civilians = []
+        self.civilian_players = []
 
     async def give_roles(self):
         """
@@ -43,27 +44,11 @@ class Games:
             self.players_info["players"].pop(s)
             i += 1
         for role in self.players_roles.values():
+            await role.send_message()
             if isinstance(role, Mafia):
-                await bot.send_message(role.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
-                                                             "Your task is to obey Don and kill everyone who stands "
-                                                             "in your way.", parse_mode="Markdown")
-                self.mafia_players.append(role.user_profile)
-
-            elif isinstance(role, Police):
-                await bot.send_message(role.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
-                                                             "The main city protector and the thunderstorm of "
-                                                             "the mafia ...", parse_mode="Markdown")
-                self.mafia_civilians.append(role.user_profile)
-            elif isinstance(role, Medic):
-                await bot.send_message(role.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
-                                                             "You decide who to save tonight ...",
-                                       parse_mode="Markdown")
-                self.mafia_civilians.append(role.user_profile)
-            elif isinstance(role, Civilian):
-                await bot.send_message(role.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
-                                                             "Your task is to find the mafia and lynch the murderers "
-                                                             "at the city meeting!", parse_mode="Markdown")
-                self.mafia_civilians.append(role.user_profile)
+                self.mafia_players.append(role)
+            else:
+                self.civilian_players.append(role)
 
     async def day(self):
         """
@@ -96,32 +81,40 @@ class Games:
                                                                             "heads in the"
                                                                             " morning ...",
                                  reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown")
-        # написать в личку мафии, что наступила ночь, и оповестить его о его союзниках
-        # for role in self.players_roles.values():
-        #     if isinstance(role, Mafia):
-        #         await bot.send_message(role.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
-        #                                                      "Your task is to obey Don and kill everyone who stands "
-        #                                                      "in your way.", parse_mode="Markdown")
-        #     elif isinstance(role, Police):
-        #         await bot.send_message(role.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
-        #                                                      "The main city protector and the thunderstorm of "
-        #                                                      "the mafia ...", parse_mode="Markdown")
-        #     elif isinstance(role, Medic):
-        #         await bot.send_message(role.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
-        #                                                      "You decide who to save tonight ...",
-        #                                parse_mode="Markdown")
-        #     elif isinstance(role, Civilian):
-        #         await bot.send_message(role.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
-        #                                                      "Your task is to find the mafia and lynch the murderers "
-        #                                                      "at the city meeting!", parse_mode="Markdown")
+        for mafia in self.mafia_players:
+            # self.button = InlineKeyboardButton(f'{self.user_profile.first_name} {self.user_profile.last_name}',
+            #                                 callback_data=user_profile.id)
+            keyboard = InlineKeyboardMarkup(row_width=1)
+            for civilian in self.civilian_players:
+                keyboard.add(civilian.button)
+            await bot.send_message(mafia.user_profile.id, "*It's time to kill!*\nChoose a victim ", reply_markup=keyboard,
+                                   parse_mode="Markdown")
+
+    # написать в личку мафии, что наступила ночь, и оповестить его о его союзниках
+    # for role in self.players_roles.values():
+    #     if isinstance(role, Mafia):
+    #         await bot.send_message(role.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
+    #                                                      "Your task is to obey Don and kill everyone who stands "
+    #                                                      "in your way.", parse_mode="Markdown")
+    #     elif isinstance(role, Police):
+    #         await bot.send_message(role.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
+    #                                                      "The main city protector and the thunderstorm of "
+    #                                                      "the mafia ...", parse_mode="Markdown")
+    #     elif isinstance(role, Medic):
+    #         await bot.send_message(role.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
+    #                                                      "You decide who to save tonight ...",
+    #                                parse_mode="Markdown")
+    #     elif isinstance(role, Civilian):
+    #         await bot.send_message(role.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
+    #                                                      "Your task is to find the mafia and lynch the murderers "
+    #                                                      "at the city meeting!", parse_mode="Markdown")
 
     async def mafia_game(self):
-
         # if message.from_user.id not in self.players_roles.keys():
         #     await message.delete()
         for mafia in self.mafia_players:
-            await bot.send_message(mafia.id, "Remember your allies: \n@" + "\n@".join(
-                map(str, (x.username + "- 🤵🏼 Mafia" for x in self.mafia_players))))
+            await bot.send_message(mafia.user_profile.id, "Remember your allies: \n@" + "\n@".join(
+                map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in self.mafia_players))))
         while self.game:
             await self.night()
             await self.day()
