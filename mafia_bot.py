@@ -19,6 +19,29 @@ note = None
 game = True
 
 
+# from aiogram.utils.callback_data import CallbackData
+# from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+#
+# c = CallbackData("post", "id", "action")
+# button = InlineKeyboardButton(
+#     "Лайкнуть",
+#     callback_data=c.new(id=5, action="like")
+# )
+# a = InlineKeyboardMarkup(row_width=2).add(button)
+#
+#
+# @dp.message_handler()
+# async def cyyyykkaaaa(mes: types.Message):
+#     await bot.send_message(mes.chat.id, f"aboba", reply_markup=a)
+#
+#
+# @dp.callback_query_handler(c.filter())
+# async def callbacks(call: types.CallbackQuery, callback_data: dict):
+#     post_id = callback_data["id"]
+#     action = callback_data["action"]
+#     await bot.send_message(call.message.chat.id, f"aboba{callback_data.get('id')}")
+
+
 async def check_admin(chat_id, bot_id):
     bot_permission = await bot.get_chat_member(chat_id, bot_id)
     if bot_permission['status'] == "administrator" and bot_permission["can_manage_chat"] \
@@ -78,27 +101,83 @@ async def registration(message: types.Message):
             if message.from_user not in players_joined["players"]:
                 await message.delete()
             await this_game.give_roles()
+
             #############################################################@##############################################
+            for mafia in this_game.mafia_players:
+                await bot.send_message(mafia.user_profile.id, "Remember your allies: \n@" + "\n@".join(
+                    map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in this_game.mafia_players))))
 
-            await this_game.mafia_game()
-            global game
-            game = this_game.game
-
-            @dp.message_handler()
-            async def chat_moderating(mes: types.Message):
-                global game
-
-                if mes.from_user.id not in this_game.players_roles.keys():  # пропиши: and game
-                    await mes.delete()
-
-            @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
-            async def callbacks(call: types.CallbackQuery, callback_data: dict):
-                print(callback_data['user_id'])
-                print("aboba mafia\n")
-
-            ############################################################################################################
             # await this_game.night()
-            # # await this_game.day()
+
+            while this_game.game:
+                # if not this_game.end_night:
+                await this_game.night()
+                await asd(this_game)
+                while len(this_game.kill_mafia) == 0 or this_game.doctor_heal == 0 or this_game.cherif_check == 0:
+                    await asyncio.sleep(1)
+                await this_game.mafia_kill()
+                await this_game.cherif_night()
+                print(f"а тут сработала моя проверОчка ;)")
+                print(f"mafia --> {this_game.kill_mafia}")
+                print(f"cherif --> {this_game.cherif_check}")
+                print(f"doctor --> {this_game.doctor_heal}")
+
+                print(this_game.mafia_players)
+                print(this_game.civilian_players)
+                # await this_game.day(False)
+
+            ###############################
+
+
+async def asd(game):
+    @dp.message_handler()
+    async def chat_moderating(mes: types.Message):
+        global game
+
+        if mes.from_user.id not in map(int, (x.id for x in players_joined["players"])):  # пропиши: and game
+            await mes.delete()
+
+    @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
+    async def callbacks(call: types.CallbackQuery, callback_data: dict):
+        game.kill_mafia.append(callback_data['user_id'])
+        await editing_message(game, callback_data, game.message_mafia)
+
+
+    @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
+    async def callbacks(call: types.CallbackQuery, callback_data: dict):
+        game.doctor_heal = callback_data['user_id']
+        await editing_message(game, callback_data, game.message_doc)
+
+
+    @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
+    async def callbacks(call: types.CallbackQuery, callback_data: dict):
+        game.cherif_check = callback_data['user_id']
+        await editing_message(game, callback_data, game.message_cherif)
+
+
+    @dp.callback_query_handler(markup.cb.filter(button_for="Day"))
+    async def callbacks(call: types.CallbackQuery, callback_data: dict):
+        game.lynching = callback_data['user_id']
+
+
+        # await this_game.mafia_game()
+        # global game
+        # game = this_game.game
+
+        # возвращать булеан для настания дня
+
+        ############################################################################################################
+        # await this_game.night()
+        # # await this_game.day()
+
+
+async def editing_message(games, callback_data, role):
+    for civilian in games.civilian_players:
+        if str(callback_data['user_id']) == str(civilian.user_profile.id):
+            await role.edit_text(f"You have chosen a {civilian.user_profile.username}")
+    for mafia in games.mafia_players:
+        if str(callback_data['user_id']) == str(mafia.user_profile.id):
+            await role.edit_text(f"You have chosen a {mafia.user_profile.username}")
 
 
 @dp.callback_query_handler(text="+30s")

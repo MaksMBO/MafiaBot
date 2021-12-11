@@ -3,6 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMar
 import config
 import logging
 import markup
+from aiogram.utils.callback_data import CallbackData
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.TOKEN)
@@ -13,15 +14,10 @@ class Civilian:
         self.user_profile = user_profile
         self.is_dead = False  # boolean is player alive or dead
         self.another_player_id = 0
-
-
-        self.button_for_mafia = self.buttons("Mafia")
-        self.button_for_police = self.buttons("Police")
-        self.button_for_doc = self.buttons("Doctor")
-
+        self.button = 0
 
     def buttons(self, user):
-        return InlineKeyboardButton(
+        self.button = InlineKeyboardButton(
             f'{self.user_profile.first_name if self.user_profile.first_name else ""} '
             f'{self.user_profile.last_name if self.user_profile.last_name else ""}',
             callback_data=markup.cb.new(user_id=self.user_profile.id, button_for=user))
