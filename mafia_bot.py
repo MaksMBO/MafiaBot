@@ -90,6 +90,12 @@ async def registration(message: types.Message):
 
                 if mes.from_user.id not in this_game.players_roles.keys():  # пропиши: and game
                     await mes.delete()
+
+            @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
+            async def callbacks(call: types.CallbackQuery, callback_data: dict):
+                print(callback_data['user_id'])
+                print("aboba mafia\n")
+
             ############################################################################################################
             # await this_game.night()
             # # await this_game.day()

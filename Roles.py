@@ -2,6 +2,7 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
 import config
 import logging
+import markup
 
 logging.basicConfig(level=logging.INFO)
 bot = Bot(token=config.TOKEN)
@@ -12,10 +13,18 @@ class Civilian:
         self.user_profile = user_profile
         self.is_dead = False  # boolean is player alive or dead
         self.another_player_id = 0
-        self.button = InlineKeyboardButton(
+
+
+        self.button_for_mafia = self.buttons("Mafia")
+        self.button_for_police = self.buttons("Police")
+        self.button_for_doc = self.buttons("Doctor")
+
+
+    def buttons(self, user):
+        return InlineKeyboardButton(
             f'{self.user_profile.first_name if self.user_profile.first_name else ""} '
             f'{self.user_profile.last_name if self.user_profile.last_name else ""}',
-            callback_data=user_profile.id)
+            callback_data=markup.cb.new(user_id=self.user_profile.id, button_for=user))
 
     async def send_message(self):
         await bot.send_message(self.user_profile.id, "*You are a 👨🏼 Civilian.*\n"

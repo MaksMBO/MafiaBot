@@ -1,4 +1,5 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.callback_data import  CallbackData
 
 """INLINE KEYBOARD BUTTONS"""
 inline_button_go = InlineKeyboardButton("Go", url='https://t.me/CeeebBot?start=a')
@@ -15,3 +16,5 @@ inline_button_addBot = InlineKeyboardButton("Add bot to server🕵🏻‍♂️"
 inline_keyboard_start = InlineKeyboardMarkup(row_width=2).add(inline_button_addBot, inline_button_profile,
                                                               inline_button_help)
 inline_keyboard_back = InlineKeyboardMarkup(row_width=2).add(inline_button_back)
+
+cb = CallbackData("night_action", "user_id", "button_for")

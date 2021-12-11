@@ -82,29 +82,44 @@ class Games:
                                                                             " morning ...",
                                  reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown")
 
-        medic = 0
-        police = 0
-        keyboard_players = InlineKeyboardMarkup(row_width=1)
-        keyboard = InlineKeyboardMarkup(row_width=1)
-        keyboard_for_police = InlineKeyboardMarkup(row_width=1)
+        # if self.doc_id == self.doctor_heal:
+        #     self.treat_yourself = True
+
+        keyboard_doctor = InlineKeyboardMarkup(row_width=1)
+        keyboard_cherif = InlineKeyboardMarkup(row_width=1)
+        keyboard_mafia = InlineKeyboardMarkup(row_width=1)
+
         for civilian in self.civilian_players:
-            keyboard.add(civilian.button)
-            keyboard_players.add(civilian.button)
-            if isinstance(civilian, Medic):
-                medic = civilian
+
+            keyboard_mafia.add(civilian.button_for_mafia)
+
             if not isinstance(civilian, Police):
-                keyboard_for_police.add(civilian.button)
-            else:
-                police = civilian
+                keyboard_cherif.add(civilian.button_for_police)
+            # if isinstance(civilian, Medic):
+            keyboard_doctor.add(civilian.button_for_doc)
+
+            #
+            # if isinstance(civilian, Medic) and self.treat_yourself:
+            #     continue
+            # if civilian != self.doctor_heal:
+            #     civilian.buttons("Doctor")
+            #     keyboard_doctor.add(civilian.button)
+
         for mafia in self.mafia_players:
-            keyboard_players.add(mafia.button)
-            keyboard_for_police.add(mafia.button)
+
+            keyboard_cherif.add(mafia.button_for_police)
+
+            keyboard_doctor.add(mafia.button_for_doc)
             await bot.send_message(mafia.user_profile.id, "*It's time to kill!*\nChoose a victim ",
-                                   reply_markup=keyboard, parse_mode="Markdown")
-        await bot.send_message(medic.user_profile.id, "*Who will you heal?*\nChoose a patient",
-                               reply_markup=keyboard_players, parse_mode="Markdown")
-        await bot.send_message(police.user_profile.id, "*Choose who you want to check tonight.*\nChoose suspect:",
-                               reply_markup=keyboard_for_police, parse_mode="Markdown")
+                                   reply_markup=keyboard_mafia, parse_mode="Markdown")
+
+        for civilian in self.civilian_players:
+            if isinstance(civilian, Police):
+                await bot.send_message(civilian.user_profile.id, "*Choose who you want to check tonight.*\nChoose suspect:",
+                                       reply_markup=keyboard_cherif, parse_mode="Markdown")
+            if isinstance(civilian, Medic):
+                await bot.send_message(civilian.user_profile.id, "*Who will you heal?*\nChoose a patient",
+                                       reply_markup=keyboard_doctor, parse_mode="Markdown")
 
     async def mafia_game(self):
         # if message.from_user.id not in self.players_roles.keys():
