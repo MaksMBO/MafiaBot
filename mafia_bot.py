@@ -19,29 +19,6 @@ note = None
 game = True
 
 
-# from aiogram.utils.callback_data import CallbackData
-# from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-#
-# c = CallbackData("post", "id", "action")
-# button = InlineKeyboardButton(
-#     "Лайкнуть",
-#     callback_data=c.new(id=5, action="like")
-# )
-# a = InlineKeyboardMarkup(row_width=2).add(button)
-#
-#
-# @dp.message_handler()
-# async def cyyyykkaaaa(mes: types.Message):
-#     await bot.send_message(mes.chat.id, f"aboba", reply_markup=a)
-#
-#
-# @dp.callback_query_handler(c.filter())
-# async def callbacks(call: types.CallbackQuery, callback_data: dict):
-#     post_id = callback_data["id"]
-#     action = callback_data["action"]
-#     await bot.send_message(call.message.chat.id, f"aboba{callback_data.get('id')}")
-
-
 async def check_admin(chat_id, bot_id):
     bot_permission = await bot.get_chat_member(chat_id, bot_id)
     if bot_permission['status'] == "administrator" and bot_permission["can_manage_chat"] \
@@ -95,6 +72,8 @@ async def registration(message: types.Message):
             await bot.send_message(message.chat.id, "Not enough players to start the game...")
             players_joined.clear()
             is_registration = True
+        elif len(players_joined["players"]) >= 13:
+            players_joined["time_remaining"] = 0
         else:
             await bot.send_message(message.chat.id, "*GAME IS STARTED*", parse_mode="Markdown")
             this_game = Games(players_joined)
@@ -117,10 +96,12 @@ async def registration(message: types.Message):
                 await this_game.mafia_kill()
                 await this_game.cherif_night()
                 await this_game.day()
-                while len(this_game.lynch) < len(this_game.civilian_players)+len(this_game.mafia_players):
+                timer = 120
+                while len(this_game.lynch) < len(this_game.civilian_players) + len(
+                        this_game.mafia_players) and timer >= 0:
                     await asyncio.sleep(1)
+                    timer -= 1
                 await this_game.lynched()
-
 
             ###############################
 
@@ -163,14 +144,11 @@ async def handlers_call(game):
         await editing_message(game, callback_data, game.players_dict[call.from_user.id])
 
 
-
 async def editing_message(games, callback_data, dicts):
     for civilian in games.civilian_players:
         if str(callback_data['user_id']) == str(civilian.user_profile.id):
-            # print(f"{str(civilian.user_profile.id)} == {str(callback_data['user_id'])}")
             await dicts.edit_text(f"You have chosen a {civilian.user_profile.username}")
     for mafia in games.mafia_players:
-        # print(f"{str(mafia.user_profile.id)} == {str(callback_data['user_id'])}")
         if str(callback_data['user_id']) == str(mafia.user_profile.id):
             await dicts.edit_text(f"You have chosen a {mafia.user_profile.username}")
 

@@ -1,5 +1,5 @@
-from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.utils.callback_data import  CallbackData
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.utils.callback_data import CallbackData
 
 """INLINE KEYBOARD BUTTONS"""
 inline_button_go = InlineKeyboardButton("Go", url='https://t.me/CeeebBot?start=a')
