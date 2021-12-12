@@ -19,29 +19,6 @@ note = None
 game = True
 
 
-# from aiogram.utils.callback_data import CallbackData
-# from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
-#
-# c = CallbackData("post", "id", "action")
-# button = InlineKeyboardButton(
-#     "Лайкнуть",
-#     callback_data=c.new(id=5, action="like")
-# )
-# a = InlineKeyboardMarkup(row_width=2).add(button)
-#
-#
-# @dp.message_handler()
-# async def cyyyykkaaaa(mes: types.Message):
-#     await bot.send_message(mes.chat.id, f"aboba", reply_markup=a)
-#
-#
-# @dp.callback_query_handler(c.filter())
-# async def callbacks(call: types.CallbackQuery, callback_data: dict):
-#     post_id = callback_data["id"]
-#     action = callback_data["action"]
-#     await bot.send_message(call.message.chat.id, f"aboba{callback_data.get('id')}")
-
-
 async def check_admin(chat_id, bot_id):
     bot_permission = await bot.get_chat_member(chat_id, bot_id)
     if bot_permission['status'] == "administrator" and bot_permission["can_manage_chat"] \
@@ -117,10 +94,9 @@ async def registration(message: types.Message):
                 await this_game.mafia_kill()
                 await this_game.cherif_night()
                 await this_game.day()
-                while len(this_game.lynch) < len(this_game.civilian_players)+len(this_game.mafia_players):
+                while len(this_game.lynch) < len(this_game.civilian_players) + len(this_game.mafia_players):
                     await asyncio.sleep(1)
                 await this_game.lynched()
-
 
             ###############################
 
@@ -161,7 +137,6 @@ async def handlers_call(game):
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.lynch.append(callback_data['user_id'])
         await editing_message(game, callback_data, game.players_dict[call.from_user.id])
-
 
 
 async def editing_message(games, callback_data, dicts):

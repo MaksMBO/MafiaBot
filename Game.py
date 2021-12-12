@@ -128,10 +128,11 @@ class Games:
         gif_none_lynched = open('Other/no_one_lynched.gif', 'rb')
         gif_lynching = open('Other/lynching.gif', 'rb')
         print(self.lynch)
+        gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
+
         lynch_dict = dict((lynch_id, self.lynch.count(lynch_id)) for lynch_id in self.lynch)
         person_lynched = await self.check_lynching(lynch_dict)
         print(f'BEFORE: {self.civilian_players} + {self.mafia_players}')
-
         if person_lynched:
             for civilian in self.civilian_players:
                 if str(civilian.user_profile.id) == str(person_lynched):
@@ -140,6 +141,8 @@ class Games:
                         caption=f'*@{civilian.user_profile.username} was lynched!*',
                         parse_mode="Markdown"
                     )
+                    await bot.send_animation(civilian.user_profile.id, gif_direct_lynching, caption="You were lynched",
+                                             parse_mode="Markdown")
                     self.civilian_players.remove(civilian)
             for mafia in self.mafia_players:
                 if str(mafia.user_profile.id) == str(person_lynched):
@@ -148,6 +151,8 @@ class Games:
                         caption=f'*@{mafia.user_profile.username} was lynched!*',
                         parse_mode="Markdown"
                     )
+                    await bot.send_animation(mafia.user_profile.id, gif_direct_lynching, caption="You were lynched",
+                                             parse_mode="Markdown")
                     self.mafia_players.remove(mafia)
             await self.end_game_check()
         else:
@@ -155,6 +160,9 @@ class Games:
                 self.players_info["chat_id"], gif_none_lynched, caption=f'*Voices diverged.*\nNo one was lynched.',
                 parse_mode="Markdown"
             )
+        print(lynch_dict)
+        lynch_dict.clear()
+        self.lynch.clear()
 
     async def output_buttons_lynch(self, role, buttons):
         for person in role:
@@ -234,24 +242,31 @@ class Games:
         await self.end_game_check()
 
     async def end_game_check(self):
-        # проверка на коец игры
+        gif_mafia_win = open("Other/victory_mafia.gif")
+        gif_civilian_win = open("Other/victory_civilian.gif")
         if not self.mafia_players:
-            await bot.send_message(self.players_info["chat_id"], "*Победа мирных*\n", parse_mode="Markdown")
+            await bot.send_animation(self.players_info["chat_id"], gif_civilian_win, caption="*Civilians won*\n",
+                                     parse_mode="Markdown")
             self.game = False
         if len(self.mafia_players) == len(self.civilian_players):
-            await bot.send_message(self.players_info["chat_id"], "*Победа мафии*\n", parse_mode="Markdown")
+            await bot.send_animation(self.players_info["chat_id"], gif_mafia_win, caption="*Civilians won*\n",
+                                     parse_mode="Markdown")
             self.game = False
 
     async def mafia_kill(self):
-        # если мафии выбрали разных людей, убиваеться раддомно один из них, если доктор лечит убитого, он не умирает
+        gif_direct_kill = open('Other/killed_ls.gif')
         dead = random.choice(self.kill_mafia)
         for civilian in self.civilian_players:
             if str(civilian.user_profile.id) == dead and not str(self.doctor_heal) == dead:
+                await bot.send_animation(civilian.user_profile.id, gif_direct_kill, caption="*You were killed*",
+                                         parse_mode="Markdown")
                 self.civilian_players.remove(civilian)
                 self.night_kill = civilian
 
         for mafia in self.mafia_players:
             if str(mafia.user_profile.id) == dead and not str(self.doctor_heal) == dead:
+                await bot.send_animation(mafia.user_profile.id, gif_direct_kill, caption="*You were killed*",
+                                         parse_mode="Markdown")
                 self.mafia_players.remove(mafia)
                 self.night_kill = mafia
 
@@ -270,5 +285,5 @@ class Games:
             pass
         return mafia, doc, police
 
-# прописать день(линчевание, таймер на линчевание), вывести в день убийство за ночь,
+# прописать день(линчевание, таймер на линчевание),
 # профиль игрока
