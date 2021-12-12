@@ -27,11 +27,17 @@ class Games:
         self.treat_yourself = False
         self.doc_id = 1
         self.cherif_id = 0
-        self.lynching = 0
+
         self.end_night = False
         self.message_mafia = 0
         self.message_doc = 0
         self.message_cherif = 0
+        self.night_kill = 0
+        self.lynch = []
+        self.lynching = 0
+        self.message = 0
+        self.role_dict = {}
+        self.players_dict = {}
 
     async def give_roles(self):
         """
@@ -80,9 +86,25 @@ class Games:
                     f"... morning ...", parse_mode="Markdown"
         )
 
+        gif_kill = open('Other/Mafia_kill.gif', 'rb')
+        gif_do_not_kill = open('Other/mafia_dont_kill.gif', 'rb')
+        if self.night_kill:
+            await bot.send_animation(
+                self.players_info["chat_id"], gif_kill,
+                caption=f'*{self.night_kill.user_profile.first_name if self.night_kill.user_profile.first_name else ""}'
+                        f'{self.night_kill.user_profile.last_name if self.night_kill.user_profile.last_name else ""}* '
+                        f'was killed that night',
+                parse_mode="Markdown"
+            )
+        else:
+            await bot.send_animation(
+                self.players_info["chat_id"], gif_do_not_kill, caption=f'*No one was killed that night*',
+                parse_mode="Markdown"
+            )
+
         # тут время, которое даеться на принятие решения
         # выводит все кнопки в общий чат, для линчевания
-        await bot.send_message()
+        # await bot.send_message()
         keyboard_day = InlineKeyboardMarkup(row_width=1)
         for civilian in self.civilian_players:
             civilian.buttons("Day")
@@ -90,13 +112,29 @@ class Games:
         for mafia in self.mafia_players:
             mafia.buttons("Day")
             keyboard_day.add(mafia.button)
-        await bot.send_message(
-            self.players_info["chat_id"], "*It's time to look for the guilty ones!*\nWho do you want to lynch?",
-            reply_markup=keyboard_day, parse_mode="Markdown"
-        )
+        await self.output_buttons_lynch(self.civilian_players, keyboard_day)
+        await self.output_buttons_lynch(self.mafia_players, keyboard_day)
         self.end_night = False
         await self.end_game_check()
         day_counter += 1
+
+    async def lynched(self):
+        d = dict((i, self.lynch.count(i)) for i in self.lynch)
+
+        k = [i for i, j in d.items() if j == max(d.values())]
+        # if len(k) == 1:
+        #     for civilian in self.civilian_players:
+
+
+
+    async def output_buttons_lynch(self, role, buttons):
+        for person in role:
+            self.message = await bot.send_message(
+                person.user_profile.id, "*It's time to look for the guilty ones!*\nWho do you want to lynch?",
+                reply_markup=buttons, parse_mode="Markdown"
+            )
+            self.players_dict[person.user_profile.id] = self.message
+
 
     async def night(self):
         """
@@ -104,6 +142,7 @@ class Games:
         role function run loop
 
         """
+        self.night_kill = 0
         gif = open('Other/sunset.gif', 'rb')
         await bot.send_animation(
             self.players_info["chat_id"], gif,
@@ -140,6 +179,7 @@ class Games:
             keyboard_doctor.add(mafia.button)
             self.message_mafia = await bot.send_message(mafia.user_profile.id, "*It's time to kill!*\nChoose a victim ",
                                                         reply_markup=keyboard_mafia, parse_mode="Markdown")
+            self.role_dict[mafia.user_profile.id] = self.message_mafia
 
         for civilian in self.civilian_players:
             if isinstance(civilian, Police):
@@ -147,11 +187,13 @@ class Games:
                 self.message_cherif = await bot.send_message(civilian.user_profile.id,
                                                              "*Choose who you want to check tonight.*\nChoose suspect:",
                                                              reply_markup=keyboard_cherif, parse_mode="Markdown")
+                self.role_dict[civilian.user_profile.id] = self.message_cherif
             if isinstance(civilian, Medic):
                 self.doc_id = civilian.user_profile.id
                 self.message_doc = await bot.send_message(civilian.user_profile.id,
                                                           "*Who will you heal?*\nChoose a patient",
                                                           reply_markup=keyboard_doctor, parse_mode="Markdown")
+                self.role_dict[civilian.user_profile.id] = self.message_doc
         # print(f'DOCTOR {self.doc_id} == {self.doctor_heal}')
         # print(f'DOCTOR {type(self.doc_id)} == {type(self.doctor_heal)}')
         # if str(self.doc_id) == self.doctor_heal:
@@ -179,12 +221,13 @@ class Games:
         dead = random.choice(self.kill_mafia)
         for civilian in self.civilian_players:
             if str(civilian.user_profile.id) == dead and not str(self.doctor_heal) == dead:
-                print(f"{civilian.user_profile.id} == {dead} == {self.doctor_heal}")
                 self.civilian_players.remove(civilian)
+                self.night_kill = civilian
 
         for mafia in self.mafia_players:
             if str(mafia.user_profile.id) == dead and not str(self.doctor_heal) == dead:
                 self.mafia_players.remove(mafia)
+                self.night_kill = mafia
 
     async def cherif_night(self):
         for mafia in self.mafia_players:
@@ -203,7 +246,6 @@ class Games:
         while len(mafia) == 0 or doc == 0 or police == 0:
             pass
         return mafia, doc, police
-
 
 # прописать день(линчевание, таймер на линчевание), вывести в день убийство за ночь,
 # профиль игрока

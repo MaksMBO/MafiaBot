@@ -123,7 +123,7 @@ async def registration(message: types.Message):
 
                 print(this_game.mafia_players)
                 print(this_game.civilian_players)
-                # await this_game.day(False)
+                await this_game.day()
 
             ###############################
 
@@ -139,7 +139,7 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.kill_mafia.append(callback_data['user_id'])
-        await editing_message(game, callback_data, game.message_mafia)
+        await editing_message(game, callback_data, game.mafia_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*Mafia loaded weapons*', parse_mode="Markdown"
         )
@@ -147,7 +147,8 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.doctor_heal = callback_data['user_id']
-        await editing_message(game, callback_data, game.message_doc)
+        print(call.from_user.id)
+        await editing_message(game, callback_data, game.mafia_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The doctor went out on night duty*', parse_mode="Markdown"
         )
@@ -155,34 +156,29 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.cherif_check = callback_data['user_id']
-        await editing_message(game, callback_data, game.message_cherif)
+        print(f"{game} {callback_data}, {game.message_cherif}")
+        await editing_message(game, callback_data, game.mafia_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The Commissioner went to look for the guilty*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Day"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        game.lynching = callback_data['user_id']
-        await bot.send_message(players_joined['chat_id'], 'ПОХУЙ ВАЩЕ')
-
-        # await this_game.mafia_game()
-        # global game
-        # game = this_game.game
-
-        # возвращать булеан для настания дня
-
-        ############################################################################################################
-        # await this_game.night()
-        # # await this_game.day()
+        game.lynch.append(callback_data['user_id'])
+        print(f"{game} {callback_data}, {game.message}")
+        await editing_message(game, callback_data, game.players_dict[call.from_user.id])
 
 
-async def editing_message(games, callback_data, role):
+
+async def editing_message(games, callback_data, dicts):
     for civilian in games.civilian_players:
         if str(callback_data['user_id']) == str(civilian.user_profile.id):
-            await role.edit_text(f"You have chosen a {civilian.user_profile.username}")
+            # print(f"{str(civilian.user_profile.id)} == {str(callback_data['user_id'])}")
+            await dicts.edit_text(f"You have chosen a {civilian.user_profile.username}")
     for mafia in games.mafia_players:
+        # print(f"{str(mafia.user_profile.id)} == {str(callback_data['user_id'])}")
         if str(callback_data['user_id']) == str(mafia.user_profile.id):
-            await role.edit_text(f"You have chosen a {mafia.user_profile.username}")
+            await dicts.edit_text(f"You have chosen a {mafia.user_profile.username}")
 
 
 @dp.callback_query_handler(text="+30s")
@@ -232,9 +228,9 @@ async def send_welcome_message(message: types.Message):
                     )
 
         await bot.send_message(
-                message.from_user.id, "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
-                reply_markup=markup.inline_keyboard_start
-            )
+            message.from_user.id, "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
+            reply_markup=markup.inline_keyboard_start
+        )
 
         await message.delete()
     else:
