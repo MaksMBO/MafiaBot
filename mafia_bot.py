@@ -116,14 +116,11 @@ async def registration(message: types.Message):
                     await asyncio.sleep(1)
                 await this_game.mafia_kill()
                 await this_game.cherif_night()
-                print(f"а тут сработала моя проверОчка ;)")
-                print(f"mafia --> {this_game.kill_mafia}")
-                print(f"cherif --> {this_game.cherif_check}")
-                print(f"doctor --> {this_game.doctor_heal}")
-
-                print(this_game.mafia_players)
-                print(this_game.civilian_players)
                 await this_game.day()
+                while len(this_game.lynch) < len(this_game.civilian_players)+len(this_game.mafia_players):
+                    await asyncio.sleep(1)
+                await this_game.lynched()
+
 
             ###############################
 
@@ -139,7 +136,7 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.kill_mafia.append(callback_data['user_id'])
-        await editing_message(game, callback_data, game.mafia_dict[call.from_user.id])
+        await editing_message(game, callback_data, game.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*Mafia loaded weapons*', parse_mode="Markdown"
         )
@@ -147,8 +144,7 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.doctor_heal = callback_data['user_id']
-        print(call.from_user.id)
-        await editing_message(game, callback_data, game.mafia_dict[call.from_user.id])
+        await editing_message(game, callback_data, game.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The doctor went out on night duty*', parse_mode="Markdown"
         )
@@ -156,8 +152,7 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.cherif_check = callback_data['user_id']
-        print(f"{game} {callback_data}, {game.message_cherif}")
-        await editing_message(game, callback_data, game.mafia_dict[call.from_user.id])
+        await editing_message(game, callback_data, game.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The Commissioner went to look for the guilty*', parse_mode="Markdown"
         )
@@ -165,7 +160,6 @@ async def handlers_call(game):
     @dp.callback_query_handler(markup.cb.filter(button_for="Day"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         game.lynch.append(callback_data['user_id'])
-        print(f"{game} {callback_data}, {game.message}")
         await editing_message(game, callback_data, game.players_dict[call.from_user.id])
 
 
@@ -199,38 +193,30 @@ async def timer_extend(call: types.CallbackQuery):
 async def send_welcome_message(message: types.Message):
     if message.chat.id > 0:
         if message.get_args() == 'a':
+
             if players_joined["time_remaining"] == 0:
-                await bot.send_message(
-                    message.from_user.id, "There is no game registered"
-                )
+                await bot.send_message(message.from_user.id, "There is no game registered")
             elif message.from_user in players_joined["players"]:
-                await bot.send_message(
-                    message.from_user.id, "You are already registered, just wait⌛️"
-                )
+                await bot.send_message(message.from_user.id,
+                                       "You are already registered, just wait⌛️")
             else:
-                await bot.send_message(
-                    message.from_user.id, "You have registered in the game, wait for the start✅"
-                )
+                await bot.send_message(message.from_user.id,
+                                       "You have registered in the game, wait for the start✅")
 
                 players_joined["players"].append(message.from_user)
 
                 global note
-
                 if len(players_joined["players"]) == 1:
-                    note = await bot.send_message(
-                        players_joined["chat_id"], "*Registration is in progress*\n\nRegistered:\n@" +
-                                                   "\n@".join(map(str, (x.username for x in players_joined["players"])))
-                    )
+                    note = await bot.send_message(players_joined["chat_id"],
+                                                  "*Registration is in progress*\n\nRegistered:\n@" +
+                                                  "\n@".join(map(str, (x.username for x in players_joined["players"]))))
                 else:
-                    await note.edit_text(
-                        "*Registration is in progress*\n\nRegistered:\n@" +
-                        "\n@".join(map(str, (x.username for x in players_joined["players"])))
-                    )
-
-        await bot.send_message(
-            message.from_user.id, "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
-            reply_markup=markup.inline_keyboard_start
-        )
+                    await note.edit_text("*Registration is in progress*\n\nRegistered:\n@" + "\n@".join(
+                        map(str, (x.username for x in players_joined["players"]))))
+        else:
+            await bot.send_message(message.from_user.id,
+                                   "Hi! {0.first_name}, 🕴 I'm mafia bot ".format(message.from_user),
+                                   reply_markup=markup.inline_keyboard_start)
 
         await message.delete()
     else:

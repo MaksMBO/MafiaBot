@@ -88,10 +88,11 @@ class Games:
 
         gif_kill = open('Other/Mafia_kill.gif', 'rb')
         gif_do_not_kill = open('Other/mafia_dont_kill.gif', 'rb')
+
         if self.night_kill:
             await bot.send_animation(
                 self.players_info["chat_id"], gif_kill,
-                caption=f'*{self.night_kill.user_profile.first_name if self.night_kill.user_profile.first_name else ""}'
+                caption=f'*{self.night_kill.user_profile.first_name if self.night_kill.user_profile.first_name else ""} '
                         f'{self.night_kill.user_profile.last_name if self.night_kill.user_profile.last_name else ""}* '
                         f'was killed that night',
                 parse_mode="Markdown"
@@ -115,17 +116,45 @@ class Games:
         await self.output_buttons_lynch(self.civilian_players, keyboard_day)
         await self.output_buttons_lynch(self.mafia_players, keyboard_day)
         self.end_night = False
-        await self.end_game_check()
         day_counter += 1
 
+    @staticmethod
+    async def check_lynching(dict_for_lynch):
+        lynched_players = [player_id for player_id, counter_of_voices in dict_for_lynch.items() if
+                           counter_of_voices == max(dict_for_lynch.values())]
+        return lynched_players[0] if len(lynched_players) < 2 else None
+
     async def lynched(self):
-        d = dict((i, self.lynch.count(i)) for i in self.lynch)
+        gif_none_lynched = open('Other/no_one_lynched.gif', 'rb')
+        gif_lynching = open('Other/lynching.gif', 'rb')
+        print(self.lynch)
+        lynch_dict = dict((lynch_id, self.lynch.count(lynch_id)) for lynch_id in self.lynch)
+        person_lynched = await self.check_lynching(lynch_dict)
+        print(f'BEFORE: {self.civilian_players} + {self.mafia_players}')
 
-        k = [i for i, j in d.items() if j == max(d.values())]
-        # if len(k) == 1:
-        #     for civilian in self.civilian_players:
-
-
+        if person_lynched:
+            for civilian in self.civilian_players:
+                if str(civilian.user_profile.id) == str(person_lynched):
+                    await bot.send_animation(
+                        self.players_info["chat_id"], gif_lynching,
+                        caption=f'*@{civilian.user_profile.username} was lynched!*',
+                        parse_mode="Markdown"
+                    )
+                    self.civilian_players.remove(civilian)
+            for mafia in self.mafia_players:
+                if str(mafia.user_profile.id) == str(person_lynched):
+                    await bot.send_animation(
+                        self.players_info["chat_id"], gif_lynching,
+                        caption=f'*@{mafia.user_profile.username} was lynched!*',
+                        parse_mode="Markdown"
+                    )
+                    self.mafia_players.remove(mafia)
+            await self.end_game_check()
+        else:
+            await bot.send_animation(
+                self.players_info["chat_id"], gif_none_lynched, caption=f'*Voices diverged.*\nNo one was lynched.',
+                parse_mode="Markdown"
+            )
 
     async def output_buttons_lynch(self, role, buttons):
         for person in role:
@@ -134,7 +163,6 @@ class Games:
                 reply_markup=buttons, parse_mode="Markdown"
             )
             self.players_dict[person.user_profile.id] = self.message
-
 
     async def night(self):
         """
@@ -168,7 +196,7 @@ class Games:
 
             if isinstance(civilian, Medic) and self.treat_yourself:
                 continue
-            if civilian != self.doctor_heal:
+            if str(civilian.user_profile.id) != self.doctor_heal:
                 civilian.buttons("Doctor")
                 keyboard_doctor.add(civilian.button)
 
@@ -194,8 +222,7 @@ class Games:
                                                           "*Who will you heal?*\nChoose a patient",
                                                           reply_markup=keyboard_doctor, parse_mode="Markdown")
                 self.role_dict[civilian.user_profile.id] = self.message_doc
-        # print(f'DOCTOR {self.doc_id} == {self.doctor_heal}')
-        # print(f'DOCTOR {type(self.doc_id)} == {type(self.doctor_heal)}')
+
         # if str(self.doc_id) == self.doctor_heal:
         #     self.treat_yourself = True
         ##################################################################################################################
@@ -203,7 +230,6 @@ class Games:
         self.kill_mafia = []
         self.doctor_heal = int(not any(self.doc_id == x.user_profile.id for x in self.civilian_players))
         self.cherif_check = int(not any(self.cherif_id == x.user_profile.id for x in self.civilian_players))
-        self.cherif_check = 0
         self.end_night = True
         await self.end_game_check()
 
@@ -231,10 +257,7 @@ class Games:
 
     async def cherif_night(self):
         for mafia in self.mafia_players:
-            print(f"{self.cherif_check} == {mafia.user_profile.id}")
-            print(f"{type(self.cherif_check)} == {type(mafia.user_profile.id)}")
             if self.cherif_check == str(mafia.user_profile.id):
-                print(f"{self.cherif_check} == {mafia.user_profile.id} == ")
                 await bot.send_message(self.cherif_id, f"The player {mafia.user_profile.username} is a mafia - 🤵🏼")
         for civilian in self.civilian_players:
             if self.cherif_check == str(civilian.user_profile.id):
