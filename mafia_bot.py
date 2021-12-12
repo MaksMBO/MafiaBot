@@ -72,6 +72,8 @@ async def registration(message: types.Message):
             await bot.send_message(message.chat.id, "Not enough players to start the game...")
             players_joined.clear()
             is_registration = True
+        elif len(players_joined["players"]) >= 13:
+            players_joined["time_remaining"] = 0
         else:
             await bot.send_message(message.chat.id, "*GAME IS STARTED*", parse_mode="Markdown")
             this_game = Games(players_joined)
