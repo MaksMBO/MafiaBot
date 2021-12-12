@@ -25,7 +25,7 @@ class Games:
         self.doctor_heal = 0
         self.cherif_check = 0
         self.treat_yourself = False
-        self.doc_id = 0
+        self.doc_id = 1
         self.cherif_id = 0
         self.lynching = 0
         self.end_night = False
@@ -63,28 +63,26 @@ class Games:
             else:
                 self.civilian_players.append(role)
 
-    async def day(self, night_action_completed):
+    async def day(self):
         """
 
         Start a timer for discussion
-
         voting in private messages
-
         if additional voting is needed, it is carried out in the general chat
 
         """
 
-        if night_action_completed:
-            day_counter = 1
-            gif = open('Other/sunrise.gif', 'rb')
-            await bot.send_animation(self.players_info["chat_id"], gif, caption=f"*🏙 Day {day_counter}*\n"
-                                                                                "The sun rises, drying the blood spilled"
-                                                                                " at night on the sidewalks ..."
-                                                                                " morning ...", parse_mode="Markdown")
+        day_counter = 1
+        gif = open('Other/sunrise.gif', 'rb')
+        await bot.send_animation(
+            self.players_info["chat_id"], gif,
+            caption=f"*🏙 Day {day_counter}*\nThe sun rises, drying the blood spilled at night on the sidewalks "
+                    f"... morning ...", parse_mode="Markdown"
+        )
 
         # тут время, которое даеться на принятие решения
-
         # выводит все кнопки в общий чат, для линчевания
+        await bot.send_message()
         keyboard_day = InlineKeyboardMarkup(row_width=1)
         for civilian in self.civilian_players:
             civilian.buttons("Day")
@@ -92,11 +90,13 @@ class Games:
         for mafia in self.mafia_players:
             mafia.buttons("Day")
             keyboard_day.add(mafia.button)
-        await bot.send_message(self.players_info["chat_id"],
-                               "*It's time to look for the guilty ones!*\nWho do you want to lynch?",
-                               reply_markup=keyboard_day, parse_mode="Markdown")
+        await bot.send_message(
+            self.players_info["chat_id"], "*It's time to look for the guilty ones!*\nWho do you want to lynch?",
+            reply_markup=keyboard_day, parse_mode="Markdown"
+        )
         self.end_night = False
         await self.end_game_check()
+        day_counter += 1
 
     async def night(self):
         """
@@ -105,13 +105,15 @@ class Games:
 
         """
         gif = open('Other/sunset.gif', 'rb')
-        await bot.send_animation(self.players_info["chat_id"], gif, caption="*🌃 Night falls*\n"
-                                                                            "Only the most courageous and fearless "
-                                                                            "take to the streets"
-                                                                            " of the city. Let's try to count their "
-                                                                            "heads in the"
-                                                                            " morning ...",
-                                 reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown")
+        await bot.send_animation(
+            self.players_info["chat_id"], gif,
+            caption="*🌃 Night falls*\nOnly the most courageous and fearless take to the streets of the city. "
+                    "Let's try to count their heads in the morning ...",
+            reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown"
+        )
+
+        if str(self.doc_id) == self.doctor_heal:
+            self.treat_yourself = True
 
         keyboard_doctor = InlineKeyboardMarkup(row_width=1)
         keyboard_cherif = InlineKeyboardMarkup(row_width=1)
@@ -150,17 +152,16 @@ class Games:
                 self.message_doc = await bot.send_message(civilian.user_profile.id,
                                                           "*Who will you heal?*\nChoose a patient",
                                                           reply_markup=keyboard_doctor, parse_mode="Markdown")
-        if self.doc_id == self.doctor_heal:
-            self.treat_yourself = True
+        # print(f'DOCTOR {self.doc_id} == {self.doctor_heal}')
+        # print(f'DOCTOR {type(self.doc_id)} == {type(self.doctor_heal)}')
+        # if str(self.doc_id) == self.doctor_heal:
+        #     self.treat_yourself = True
+        ##################################################################################################################
 
         self.kill_mafia = []
-
         self.doctor_heal = int(not any(self.doc_id == x.user_profile.id for x in self.civilian_players))
         self.cherif_check = int(not any(self.cherif_id == x.user_profile.id for x in self.civilian_players))
-        print(self.doctor_heal)
-
         self.cherif_check = 0
-
         self.end_night = True
         await self.end_game_check()
 
@@ -175,7 +176,6 @@ class Games:
 
     async def mafia_kill(self):
         # если мафии выбрали разных людей, убиваеться раддомно один из них, если доктор лечит убитого, он не умирает
-
         dead = random.choice(self.kill_mafia)
         for civilian in self.civilian_players:
             if str(civilian.user_profile.id) == dead and not str(self.doctor_heal) == dead:
@@ -204,23 +204,6 @@ class Games:
             pass
         return mafia, doc, police
 
-    async def mafia_game(self):
-        for mafia in self.mafia_players:
-            await bot.send_message(mafia.user_profile.id, "Remember your allies: \n@" + "\n@".join(
-                map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in self.mafia_players))))
 
-        await self.night()
-        while self.game:
-            if not self.end_night:
-                await self.night()
-
-            if not (len(self.kill_mafia) == 0 or self.doctor_heal == 0 or self.cherif_check == 0):
-                print(f"а тут сработала моя проверОчка ;)")
-                print(f"mafia --> {self.kill_mafia}")
-                print(f"cherif --> {self.cherif_check}")
-                print(f"doctor --> {self.doctor_heal}")
-                await self.day(False)
-            # self.game = False  # надо убрать, когда все заработает
-
-# исправить доктора, прописать день(линчевание, таймер на линчевание), вывести в день убийство за ночь,
-# ночью отправлять сообщения о действии, профиль игрока
+# прописать день(линчевание, таймер на линчевание), вывести в день убийство за ночь,
+# профиль игрока
