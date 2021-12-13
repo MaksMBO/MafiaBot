@@ -106,42 +106,40 @@ async def registration(message: types.Message):
             ###############################
 
 
-async def handlers_call(game):
+async def handlers_call(games):
     @dp.message_handler()
     async def chat_moderating(mes: types.Message):
-        global game
-
-        if mes.from_user.id not in map(int, (x.id for x in players_joined["players"])):  # пропиши: and game
+        if str(mes.from_user.id) not in map(str, (x.id for x in players_joined["players"])) and games.end_night:
             await mes.delete()
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        game.kill_mafia.append(callback_data['user_id'])
-        await editing_message(game, callback_data, game.role_dict[call.from_user.id])
+        games.kill_mafia.append(callback_data['user_id'])
+        await editing_message(games, callback_data, games.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*Mafia loaded weapons*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        game.doctor_heal = callback_data['user_id']
-        await editing_message(game, callback_data, game.role_dict[call.from_user.id])
+        games.doctor_heal = callback_data['user_id']
+        await editing_message(games, callback_data, games.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The doctor went out on night duty*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        game.cherif_check = callback_data['user_id']
-        await editing_message(game, callback_data, game.role_dict[call.from_user.id])
+        games.cherif_check = callback_data['user_id']
+        await editing_message(games, callback_data, games.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The Commissioner went to look for the guilty*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Day"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        game.lynch.append(callback_data['user_id'])
-        await editing_message(game, callback_data, game.players_dict[call.from_user.id])
+        games.lynch.append(callback_data['user_id'])
+        await editing_message(games, callback_data, games.players_dict[call.from_user.id])
 
 
 async def editing_message(games, callback_data, dicts):

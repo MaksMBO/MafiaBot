@@ -78,11 +78,11 @@ class Games:
 
         """
 
-        day_counter = 1
+        self.day_counter += 1
         gif = open('Other/sunrise.gif', 'rb')
         await bot.send_animation(
             self.players_info["chat_id"], gif,
-            caption=f"*🏙 Day {day_counter}*\nThe sun rises, drying the blood spilled at night on the sidewalks "
+            caption=f"*🏙 Day {self.day_counter}*\nThe sun rises, drying the blood spilled at night on the sidewalks "
                     f"... morning ...", parse_mode="Markdown"
         )
 
@@ -116,7 +116,6 @@ class Games:
         await self.output_buttons_lynch(self.civilian_players, keyboard_day)
         await self.output_buttons_lynch(self.mafia_players, keyboard_day)
         self.end_night = False
-        day_counter += 1
 
     @staticmethod
     async def check_lynching(dict_for_lynch):
@@ -241,31 +240,26 @@ class Games:
         await self.end_game_check()
 
     async def end_game_check(self):
-        gif_mafia_win = open("Other/victory_mafia.gif")
-        gif_civilian_win = open("Other/victory_civilian.gif")
         if not self.mafia_players:
-            await bot.send_animation(self.players_info["chat_id"], gif_civilian_win, caption="*Civilians won*\n",
-                                     parse_mode="Markdown")
+            await bot.send_message(self.players_info["chat_id"], "*Civilians won*\n", parse_mode="Markdown")
+
             self.game = False
         if len(self.mafia_players) == len(self.civilian_players):
-            await bot.send_animation(self.players_info["chat_id"], gif_mafia_win, caption="*Civilians won*\n",
-                                     parse_mode="Markdown")
+            await bot.send_message(self.players_info["chat_id"], "*Civilians won*\n", parse_mode="Markdown")
+
             self.game = False
 
     async def mafia_kill(self):
-        gif_direct_kill = open('Other/killed_ls.gif')
         dead = random.choice(self.kill_mafia)
         for civilian in self.civilian_players:
             if str(civilian.user_profile.id) == dead and not str(self.doctor_heal) == dead:
-                await bot.send_animation(civilian.user_profile.id, gif_direct_kill, caption="*You were killed*",
-                                         parse_mode="Markdown")
+                await bot.send_message(civilian.user_profile.id, "*You were killed*", parse_mode="Markdown")
                 self.civilian_players.remove(civilian)
                 self.night_kill = civilian
 
         for mafia in self.mafia_players:
             if str(mafia.user_profile.id) == dead and not str(self.doctor_heal) == dead:
-                await bot.send_animation(mafia.user_profile.id, gif_direct_kill, caption="*You were killed*",
-                                         parse_mode="Markdown")
+                await bot.send_message(mafia.user_profile.id, "*You were killed*", parse_mode="Markdown")
                 self.mafia_players.remove(mafia)
                 self.night_kill = mafia
 
