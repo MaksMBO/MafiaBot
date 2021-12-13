@@ -66,21 +66,21 @@ async def registration(message: types.Message):
             players_joined["time_remaining"] -= 1
             if players_joined["time_remaining"] == 30:
                 await bot.send_message(message.chat.id, "Time until the end of registration 30 seconds")
+            if len(players_joined["players"]) >= 13:
+                players_joined["time_remaining"] = 0
             await asyncio.sleep(1)
         await bot.send_message(message.chat.id, "Registration is over")
         if len(players_joined["players"]) < 4:
             await bot.send_message(message.chat.id, "Not enough players to start the game...")
             players_joined.clear()
             is_registration = True
-        elif len(players_joined["players"]) >= 13:
-            players_joined["time_remaining"] = 0
         else:
             await bot.send_message(message.chat.id, "*GAME IS STARTED*", parse_mode="Markdown")
             this_game = Games(players_joined)
             if message.from_user not in players_joined["players"]:
                 await message.delete()
             await this_game.give_roles()
-            #############################################################@##############################################
+
             for mafia in this_game.mafia_players:
                 await bot.send_message(mafia.user_profile.id, "Remember your allies: \n@" + "\n@".join(
                     map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in this_game.mafia_players))))
@@ -99,17 +99,22 @@ async def registration(message: types.Message):
                 timer = 120
                 while len(this_game.lynch) < len(this_game.civilian_players) + len(
                         this_game.mafia_players) and timer >= 0:
+                    if timer == 60:
+                        await bot.send_message(players_joined["chat_id"], "One minute remaining")
+                    if timer == 30:
+                        await bot.send_message(players_joined["chat_id"], "30 seconds remaining")
                     await asyncio.sleep(1)
                     timer -= 1
                 await this_game.lynched()
 
-            ###############################
+
 
 
 async def handlers_call(games):
     @dp.message_handler()
     async def chat_moderating(mes: types.Message):
-        if str(mes.from_user.id) not in map(str, (x.id for x in players_joined["players"])) and games.end_night:
+        if str(mes.from_user.id) not in map(str, (x.user_profile.id for x in
+                                                  games.civilian_players + games.mafia_players)) or games.end_night:
             await mes.delete()
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))

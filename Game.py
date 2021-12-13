@@ -26,14 +26,12 @@ class Games:
         self.treat_yourself = False
         self.doc_id = 1
         self.cherif_id = 0
-
         self.end_night = False
         self.message_mafia = 0
         self.message_doc = 0
         self.message_cherif = 0
         self.night_kill = 0
         self.lynch = []
-        self.lynching = 0
         self.message = 0
         self.role_dict = {}
         self.players_dict = {}
@@ -103,9 +101,6 @@ class Games:
                 parse_mode="Markdown"
             )
 
-        # тут время, которое даеться на принятие решения
-        # выводит все кнопки в общий чат, для линчевания
-        # await bot.send_message()
         keyboard_day = InlineKeyboardMarkup(row_width=1)
         for civilian in self.civilian_players:
             civilian.buttons("Day")
@@ -229,10 +224,6 @@ class Games:
                                                           reply_markup=keyboard_doctor, parse_mode="Markdown")
                 self.role_dict[civilian.user_profile.id] = self.message_doc
 
-        # if str(self.doc_id) == self.doctor_heal:
-        #     self.treat_yourself = True
-        ##################################################################################################################
-
         self.kill_mafia = []
         self.doctor_heal = int(not any(self.doc_id == x.user_profile.id for x in self.civilian_players))
         self.cherif_check = int(not any(self.cherif_id == x.user_profile.id for x in self.civilian_players))
@@ -277,5 +268,3 @@ class Games:
         while len(mafia) == 0 or doc == 0 or police == 0:
             pass
         return mafia, doc, police
-
-# профиль игрока
