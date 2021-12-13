@@ -55,8 +55,6 @@ async def registration(message: types.Message):
         global players_joined
         await message.reply("Registration is open", reply_markup=markup.inline_keyboard_join)
         players_joined["chat_id"] = message.chat.id
-        # players_joined["players_id"] = []
-        # players_joined["players_name"] = []
         players_joined["players"] = []
         players_joined["time_remaining"] = 60
         is_registration = False
@@ -106,6 +104,7 @@ async def registration(message: types.Message):
                     await asyncio.sleep(1)
                     timer -= 1
                 await this_game.lynched()
+            is_registration = True
 
 
 

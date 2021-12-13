@@ -230,13 +230,31 @@ class Games:
         self.end_night = True
         await self.end_game_check()
 
+    async def winner_list(self, civilian, role):
+        await bot.send_message(self.players_info["chat_id"],
+                               f"*@{civilian.user_profile.username} was a {role}*", parse_mode="Markdown")
+
     async def end_game_check(self):
         if not self.mafia_players:
             await bot.send_message(self.players_info["chat_id"], "*Civilians won*\n", parse_mode="Markdown")
+            for civilian in self.civilian_players:
+                if isinstance(civilian, Police):
+                    await winner_list(civilian, "Police")
+                if isinstance(civilian, Medic):
+                    await winner_list(civilian, "Doctor")
+                else:
+                    await winner_list(civilian, "Civilian")
 
             self.game = False
         if len(self.mafia_players) == len(self.civilian_players):
-            await bot.send_message(self.players_info["chat_id"], "*Civilians won*\n", parse_mode="Markdown")
+            if len(self.mafia_players) > 1:
+                await bot.send_message(self.players_info["chat_id"],
+                                       "*Mafia won*\n@" + "\n@".join(
+                                           map(x.user_profile.username for x in self.mafia_players),
+                                           parse_mode="Markdown"))
+            else:
+                await bot.send_message(self.players_info["chat_id"],
+                                       f'*Mafia won*\n@{self.mafia_players[0].user_profile.username}')
 
             self.game = False
 
