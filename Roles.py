@@ -13,11 +13,11 @@ class Civilian:
         self.user_profile = user_profile
         self.button = 0
 
-    def buttons(self, user):
+    def buttons(self, user, number):
         self.button = InlineKeyboardButton(
             f'{self.user_profile.first_name if self.user_profile.first_name else ""} '
             f'{self.user_profile.last_name if self.user_profile.last_name else ""}',
-            callback_data=markup.cb.new(user_id=self.user_profile.id, button_for=user))
+            callback_data=markup.cb.new(user_id=self.user_profile.id, button_for=user, id_game=number))
 
     async def send_message(self):
         await bot.send_message(self.user_profile.id, "*You are a 👨🏼 Civilian.*\n"

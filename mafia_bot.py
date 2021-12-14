@@ -1,3 +1,5 @@
+from aiogram.types import update
+
 import config
 import logging
 from aiogram import Bot, Dispatcher, executor, types
@@ -17,6 +19,8 @@ MESSAGE_ID_NOTE = types.Message
 is_registration = True
 note = None
 game = True
+save_game = MemoryStorage()
+number_of_game_id = 0
 
 
 async def check_admin(chat_id, bot_id):
@@ -46,11 +50,14 @@ async def add_games_played(users, user, game_result):
 
 
 players_joined = {}
+game_number = {}
 
 
 @dp.message_handler(commands=['game'])
 async def registration(message: types.Message):
     global is_registration
+    global number_of_game_id
+    number_of_game_id += 1
     if message.chat.id < 0 and is_registration and await check_admin(message.chat.id, bot.id):
         global players_joined
         await message.reply("Registration is open", reply_markup=markup.inline_keyboard_join)
@@ -74,79 +81,87 @@ async def registration(message: types.Message):
             is_registration = True
         else:
             await bot.send_message(message.chat.id, "*GAME IS STARTED*", parse_mode="Markdown")
-            this_game = Games(players_joined)
+            game_number[str(number_of_game_id)] = Games(players_joined, number_of_game_id)
             if message.from_user not in players_joined["players"]:
                 await message.delete()
-            await this_game.give_roles()
-            #вот почему у нас другие задаются Макс, тут проблема походу в инициализации....
-            for mafia in this_game.mafia_players:
+            await game_number[str(number_of_game_id)].give_roles()
+            # вот почему у нас другие задаются Макс, тут проблема походу в инициализации....
+            for mafia in game_number[str(number_of_game_id)].mafia_players:
                 await bot.send_message(mafia.user_profile.id, "Remember your allies: \n@" + "\n@".join(
-                    map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in this_game.mafia_players))))
+                    map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in
+                              game_number[str(number_of_game_id)].mafia_players))))
 
-
-
-            while this_game.game:
+            while game_number[str(number_of_game_id)].game:
                 # if not this_game.end_night:
-                await this_game.night()
-                await handlers_call(this_game)
-                while len(this_game.kill_mafia) == 0 or this_game.doctor_heal == 0 or this_game.cherif_check == 0:
+                await game_number[str(number_of_game_id)].night()
+
+                await handlers_call(game_number[str(number_of_game_id)])
+                while len(game_number[str(number_of_game_id)].kill_mafia) == 0 or \
+                        game_number[str(number_of_game_id)].doctor_heal == 0 or \
+                        game_number[str(number_of_game_id)].cherif_check == 0:
                     await asyncio.sleep(1)
-                await this_game.mafia_kill()
-                await this_game.cherif_night()
-                await this_game.day()
+                await game_number[str(number_of_game_id)].mafia_kill()
+                await game_number[str(number_of_game_id)].cherif_night()
+                await game_number[str(number_of_game_id)].day()
                 timer = 120
-                while len(this_game.lynch) < len(this_game.civilian_players) + len(
-                        this_game.mafia_players) and timer >= 0:
+                while len(game_number[str(number_of_game_id)].lynch) < len(
+                        game_number[str(number_of_game_id)].civilian_players) + len(
+                        game_number[str(number_of_game_id)].mafia_players) and timer >= 0:
                     if timer == 60:
                         await bot.send_message(players_joined["chat_id"], "One minute remaining")
                     if timer == 30:
                         await bot.send_message(players_joined["chat_id"], "30 seconds remaining")
                     await asyncio.sleep(1)
                     timer -= 1
-                await this_game.lynched()
+                await game_number[str(number_of_game_id)].lynched()
             is_registration = True
-            this_game.role_dict.clear()
 
 
 async def handlers_call(games):
-    @dp.message_handler()
+    print(f"Тык - {games}")
+
+    @dp.message_handler(lambda mes: (str(mes.from_user.id) not in
+                                     map(str, (x.user_profile.id for x in games.civilian_players + games.mafia_players))
+                                     or games.end_night) and games.game)
     async def chat_moderating(mes: types.Message):
-        if (str(mes.from_user.id) not in map(str, (x.user_profile.id for x in
-                                                   games.civilian_players + games.mafia_players)) or games.end_night) \
-                and games.game:
-            await mes.delete()
+        await mes.delete()
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
-    async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        games.kill_mafia.append(callback_data['user_id'])
+    async def callbacks_mafia(call: types.CallbackQuery, callback_data: dict):
+        # games.kill_mafia.append(callback_data['user_id'])
+        print(game_number)
+        game_number[callback_data['id_game']].kill_mafia.append(callback_data['user_id'])
         print(f'{games.role_dict}\n\n\n\n\n\n\n\n\n')
-        await editing_message(games, callback_data, games.role_dict[call.from_user.id])
+        print(f"Game {games}")
+        await editing_message(game_number[callback_data['id_game']], callback_data, game_number[callback_data['id_game']].role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*Mafia loaded weapons*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
-    async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        games.doctor_heal = callback_data['user_id']
+    async def callbacks_doctor(call: types.CallbackQuery, callback_data: dict):
+        game_number[callback_data['id_game']].doctor_heal = callback_data['user_id']
         print(f'{games.role_dict}\n\n\n\n\n\n\n\n\n')
-        await editing_message(games, callback_data, games.role_dict[call.from_user.id])
+        print(f"Game {games}")
+        await editing_message(game_number[callback_data['id_game']], callback_data, game_number[callback_data['id_game']].role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The doctor went out on night duty*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
-    async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        games.cherif_check = callback_data['user_id']
+    async def callbacks_cherif(call: types.CallbackQuery, callback_data: dict):
+        game_number[callback_data['id_game']].cherif_check = callback_data['user_id']
         print(f'{games.role_dict}\n\n\n\n\n\n\n\n\n')
-        await editing_message(games, callback_data, games.role_dict[call.from_user.id])
+        print(f"Game {games}")
+        await editing_message(game_number[callback_data['id_game']], callback_data, game_number[callback_data['id_game']].role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The Commissioner went to look for the guilty*', parse_mode="Markdown"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Day"))
-    async def callbacks(call: types.CallbackQuery, callback_data: dict):
-        games.lynch.append(callback_data['user_id'])
-        await editing_message(games, callback_data, games.players_dict[call.from_user.id])
+    async def callbacks_day(call: types.CallbackQuery, callback_data: dict):
+        game_number[callback_data['id_game']].lynch.append(callback_data['user_id'])
+        await editing_message(game_number[callback_data['id_game']], callback_data, game_number[callback_data['id_game']].players_dict[call.from_user.id])
 
 
 async def editing_message(games, callback_data, dicts):

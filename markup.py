@@ -17,4 +17,4 @@ inline_keyboard_start = InlineKeyboardMarkup(row_width=2).add(inline_button_addB
                                                               inline_button_help)
 inline_keyboard_back = InlineKeyboardMarkup(row_width=2).add(inline_button_back)
 
-cb = CallbackData("night_action", "user_id", "button_for")
+cb = CallbackData("night_action", "user_id", "button_for", "id_game")

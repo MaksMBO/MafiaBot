@@ -14,7 +14,7 @@ dp = Dispatcher(bot, storage=MemoryStorage())
 
 
 class Games:
-    def __init__(self, players_info):
+    def __init__(self, players_info, number_game):
         self.players_info = players_info
         self.players_roles = {}
         self.game = True
@@ -36,6 +36,7 @@ class Games:
         self.role_dict = {}
         self.players_dict = {}
         self.day_counter = 0
+        self.number_game = number_game
 
     async def give_roles(self):
         """
@@ -103,10 +104,10 @@ class Games:
 
         keyboard_day = InlineKeyboardMarkup(row_width=1)
         for civilian in self.civilian_players:
-            civilian.buttons("Day")
+            civilian.buttons("Day", self.number_game)
             keyboard_day.add(civilian.button)
         for mafia in self.mafia_players:
-            mafia.buttons("Day")
+            mafia.buttons("Day", self.number_game)
             keyboard_day.add(mafia.button)
         await self.output_buttons_lynch(self.civilian_players, keyboard_day)
         await self.output_buttons_lynch(self.mafia_players, keyboard_day)
@@ -188,23 +189,23 @@ class Games:
         keyboard_mafia = InlineKeyboardMarkup(row_width=1)
 
         for civilian in self.civilian_players:
-            civilian.buttons("Mafia")
+            civilian.buttons("Mafia", self.number_game)
             keyboard_mafia.add(civilian.button)
 
             if not isinstance(civilian, Police):
-                civilian.buttons("Cherif")
+                civilian.buttons("Cherif", self.number_game)
                 keyboard_cherif.add(civilian.button)
 
             if isinstance(civilian, Medic) and self.treat_yourself:
                 continue
             if str(civilian.user_profile.id) != self.doctor_heal:
-                civilian.buttons("Doctor")
+                civilian.buttons("Doctor", self.number_game)
                 keyboard_doctor.add(civilian.button)
 
         for mafia in self.mafia_players:
-            mafia.buttons("Cherif")
+            mafia.buttons("Cherif", self.number_game)
             keyboard_cherif.add(mafia.button)
-            mafia.buttons("Doctor")
+            mafia.buttons("Doctor", self.number_game)
             keyboard_doctor.add(mafia.button)
             self.message_mafia = await bot.send_message(mafia.user_profile.id, "*It's time to kill!*\nChoose a victim ",
                                                         reply_markup=keyboard_mafia, parse_mode="Markdown")
@@ -267,3 +268,6 @@ class Games:
         while len(mafia) == 0 or doc == 0 or police == 0:
             pass
         return mafia, doc, police
+
+    def __str__(self):
+        return str(self.__dict__)
