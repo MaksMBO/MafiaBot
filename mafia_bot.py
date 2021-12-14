@@ -78,12 +78,12 @@ async def registration(message: types.Message):
             if message.from_user not in players_joined["players"]:
                 await message.delete()
             await this_game.give_roles()
-
+            #вот почему у нас другие задаются Макс, тут проблема походу в инициализации....
             for mafia in this_game.mafia_players:
                 await bot.send_message(mafia.user_profile.id, "Remember your allies: \n@" + "\n@".join(
                     map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in this_game.mafia_players))))
 
-            # await this_game.night()
+
 
             while this_game.game:
                 # if not this_game.end_night:
@@ -105,20 +105,21 @@ async def registration(message: types.Message):
                     timer -= 1
                 await this_game.lynched()
             is_registration = True
-
-
+            this_game.role_dict.clear()
 
 
 async def handlers_call(games):
     @dp.message_handler()
     async def chat_moderating(mes: types.Message):
-        if str(mes.from_user.id) not in map(str, (x.user_profile.id for x in
-                                                  games.civilian_players + games.mafia_players)) or games.end_night:
+        if (str(mes.from_user.id) not in map(str, (x.user_profile.id for x in
+                                                   games.civilian_players + games.mafia_players)) or games.end_night) \
+                and games.game:
             await mes.delete()
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Mafia"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         games.kill_mafia.append(callback_data['user_id'])
+        print(f'{games.role_dict}\n\n\n\n\n\n\n\n\n')
         await editing_message(games, callback_data, games.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*Mafia loaded weapons*', parse_mode="Markdown"
@@ -127,6 +128,7 @@ async def handlers_call(games):
     @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         games.doctor_heal = callback_data['user_id']
+        print(f'{games.role_dict}\n\n\n\n\n\n\n\n\n')
         await editing_message(games, callback_data, games.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The doctor went out on night duty*', parse_mode="Markdown"
@@ -135,6 +137,7 @@ async def handlers_call(games):
     @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
     async def callbacks(call: types.CallbackQuery, callback_data: dict):
         games.cherif_check = callback_data['user_id']
+        print(f'{games.role_dict}\n\n\n\n\n\n\n\n\n')
         await editing_message(games, callback_data, games.role_dict[call.from_user.id])
         await bot.send_message(
             players_joined['chat_id'], '*The Commissioner went to look for the guilty*', parse_mode="Markdown"
