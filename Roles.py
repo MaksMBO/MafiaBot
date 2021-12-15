@@ -20,6 +20,7 @@ class Civilian:
             callback_data=markup.cb.new(user_id=self.user_profile.id, button_for=user, id_game=number))
 
     async def send_message(self):
+        """ Sends a message to the civilians to inform them of their role """
         await bot.send_message(self.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
                                                      "Your task is to find the mafia and lynch the murderers "
                                                      "at the city meeting!", parse_mode="Markdown")
@@ -30,6 +31,7 @@ class Mafia(Civilian):
         super().__init__(user_profile)
 
     async def send_message(self):
+        """ Sends a message to the mafia to inform them of their role """
         await bot.send_message(self.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
                                                      "Your task is to obey Don and kill everyone who stands "
                                                      "in your way.", parse_mode="Markdown")
@@ -40,6 +42,7 @@ class Medic(Civilian):
         super().__init__(user_profile)
 
     async def send_message(self):
+        """ Sends a message to the Doctor to inform him of his role """
         await bot.send_message(self.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
                                                      "You decide who to save tonight ...",
                                parse_mode="Markdown")
@@ -50,6 +53,7 @@ class Police(Civilian):
         super().__init__(user_profile)
 
     async def send_message(self):
+        """ Sends a message to the Commissioner Cattani to inform him of his role """
         await bot.send_message(self.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
                                                      "The main city protector and the thunderstorm of "
                                                      "the mafia ...", parse_mode="Markdown")
