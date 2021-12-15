@@ -32,20 +32,16 @@ async def check_admin(chat_id, bot_id):
 async def update_data(users, user):
     """ update user profile in this bot"""
     if str(user.id) not in users:
-        users[user.id] = {}
-        users[user.id]['Games played'] = 0
-        users[user.id]['Games won'] = 0
-
-
-async def add_games_played(users, user, game_result):
-    """add number of games that he played"""
-    users[str(user.id)][game_result] += 1
+        users[str(user.id)] = {}
+        users[str(user.id)]['Games played'] = 0
+        users[str(user.id)]['Games won'] = 0
 
 
 @dp.message_handler(commands=['game'])
 async def registration(message: types.Message):
     """ function for registering players and perform game """
     global is_registration
+
     if message.chat.id < 0 and is_registration and await check_admin(message.chat.id, bot.id):
         global players_joined
         await message.reply(REGISTRATION_START_STR, reply_markup=markup.inline_keyboard_join)
@@ -69,6 +65,13 @@ async def registration(message: types.Message):
             is_registration = True
         else:
             await bot.send_message(message.chat.id, GAME_START_STR, parse_mode="Markdown")
+            with open('users.json', 'r') as f:
+                users = json.load(f)
+            for user in players_joined["players"]:
+                await update_data(users, user)
+                users[str(user.id)]["Games played"] += 1
+            with open('users.json', 'w') as f:
+                json.dump(users, f, indent=4)
             game_number[str(message.chat.id)] = Games(players_joined, message.chat.id)
             await game_number[str(message.chat.id)].give_roles()
 
@@ -227,8 +230,13 @@ async def send_welcome_message(message: types.Message):
 async def creating_buttons(call: types.CallbackQuery):
     """ function that sends user profile """
     await call.message.delete()
-    await bot.send_message(call.from_user.id, "👤*{0.first_name}*\n\nGames played: \nGames won: ".format(
-        call.from_user), reply_markup=markup.inline_keyboard_back, parse_mode="Markdown")
+    with open('users.json', 'r') as f:
+        users = json.load(f)
+    await bot.send_message(call.from_user.id, f"👤*{call.from_user.first_name if call.from_user.first_name else ''} "
+                                              f"{call.from_user.last_name if call.from_user.last_name else ''}*"
+                                              f"\n\nGames played: {users[str(call.from_user.id)]['Games played'] }"
+                                              f"\nGames won: {users[str(call.from_user.id)]['Games won'] }",
+                           reply_markup=markup.inline_keyboard_back, parse_mode="Markdown")
 
 
 @dp.callback_query_handler(text="Help")

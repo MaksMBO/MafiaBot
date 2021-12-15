@@ -4,6 +4,7 @@ from Constants import *
 
 class Games:
     """Class for creating game objects"""
+
     def __init__(self, players_info, number_game):
         """Constructor of the Game class
         :param self.players_info
@@ -221,13 +222,25 @@ class Games:
         self.end_night = True
         await self.end_game_check()
 
+    @staticmethod
+    async def add_win(list_of_winners):
+        """ function to add win in profile of winner """
+        with open('users.json', 'r') as f:
+            users = json.load(f)
+            for user in list_of_winners:
+                users[str(user.user_profile.id)]['Games won'] += 1
+        with open('users.json', 'w') as f:
+            json.dump(users, f, indent=4)
+
     async def end_game_check(self):
         """ Function for checking if the game is over """
         if not self.mafia_players:
             await bot.send_message(self.players_info["chat_id"], CIVILIANS_WON_STR, parse_mode="Markdown")
+            await self.add_win(self.civilian_players)
             self.game = False
         if len(self.mafia_players) == len(self.civilian_players):
             await bot.send_message(self.players_info["chat_id"], MAFIA_WON_STR, parse_mode="Markdown")
+            await self.add_win(self.mafia_players)
             self.game = False
 
     async def mafia_kill(self):
