@@ -55,18 +55,23 @@ class Games:
     async def give_roles(self):
         """Function for randomazing and giving roles for all players"""
         i = 0  # ход раздачи
-        ind = math.ceil(len(self.players_info["players"]) / 3) - 2  # количество дополнительных мафий
-        while len(self.players_info["players"]) > 0:
-            s = random.randint(0, len(self.players_info["players"]) - 1)
+        ind = math.ceil(
+            len(self.players_info[self.players_info['chat_id']]["players"]) / 3) - 2  # количество дополнительных мафий
+        while len(self.players_info[self.players_info['chat_id']]["players"]) > 0:
+            s = random.randint(0, len(self.players_info[self.players_info['chat_id']]["players"]) - 1)
             if i <= ind:
-                self.players_roles[self.players_info["players"][s]["id"]] = Mafia(self.players_info["players"][s])
+                self.players_roles[self.players_info[self.players_info['chat_id']]["players"][s]["id"]] = Mafia(
+                    self.players_info[self.players_info['chat_id']]["players"][s])
             elif i == ind + 1:
-                self.players_roles[self.players_info["players"][s]["id"]] = Police(self.players_info["players"][s])
+                self.players_roles[self.players_info[self.players_info['chat_id']]["players"][s]["id"]] = Police(
+                    self.players_info[self.players_info['chat_id']]["players"][s])
             elif i == ind + 2:
-                self.players_roles[self.players_info["players"][s]["id"]] = Medic(self.players_info["players"][s])
+                self.players_roles[self.players_info[self.players_info['chat_id']]["players"][s]["id"]] = Medic(
+                    self.players_info[self.players_info['chat_id']]["players"][s])
             else:
-                self.players_roles[self.players_info["players"][s]["id"]] = Civilian(self.players_info["players"][s])
-            self.players_info["players"].pop(s)
+                self.players_roles[self.players_info[self.players_info['chat_id']]["players"][s]["id"]] = Civilian(
+                    self.players_info[self.players_info['chat_id']]["players"][s])
+            self.players_info[self.players_info['chat_id']]["players"].pop(s)
             i += 1
         for role in self.players_roles.values():
             await role.send_message()
@@ -80,13 +85,16 @@ class Games:
         Function for performance day actions
         """
         self.day_counter += 1
-
+        gif_sunrise = open('Other/sunrise.gif', 'rb')
         await bot.send_animation(
             self.players_info["chat_id"], gif_sunrise,
             caption=f"*🏙 Day {self.day_counter}*\n" + DAY_START, parse_mode="Markdown"
         )
+        gif_sunrise.close()
+
 
         if self.night_kill:
+            gif_kill = open('Other/Mafia_kill.gif', 'rb')
             await bot.send_animation(
                 self.players_info["chat_id"], gif_kill,
                 caption=f'*{self.night_kill.user_profile.first_name if self.night_kill.user_profile.first_name else ""}'
@@ -94,10 +102,14 @@ class Games:
                         f'was killed that night',
                 parse_mode="Markdown"
             )
+            gif_kill.close()
+
         else:
+            gif_do_not_kill = open('Other/mafia_dont_kill.gif', 'rb')
             await bot.send_animation(
                 self.players_info["chat_id"], gif_do_not_kill, caption=NO_ONE_KILLED, parse_mode="Markdown"
             )
+            gif_do_not_kill.close()
 
         keyboard_day = InlineKeyboardMarkup(row_width=1)
         for civilian in self.civilian_players:
@@ -124,30 +136,40 @@ class Games:
         if person_lynched:
             for civilian in self.civilian_players:
                 if str(civilian.user_profile.id) == str(person_lynched):
+                    gif_lynching = open('Other/lynching.gif', 'rb')
                     await bot.send_animation(
                         self.players_info["chat_id"], gif_lynching,
                         caption=f'*@{civilian.user_profile.username} was lynched!*', parse_mode="Markdown"
                     )
+                    gif_lynching.close()
+                    gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
                     await bot.send_animation(
                         civilian.user_profile.id, gif_direct_lynching, caption=YOU_LYNCHED, parse_mode="Markdown"
                     )
+                    gif_direct_lynching.close()
                     self.civilian_players.remove(civilian)
             for mafia in self.mafia_players:
                 if str(mafia.user_profile.id) == str(person_lynched):
+                    gif_lynching = open('Other/lynching.gif', 'rb')
                     await bot.send_animation(
                         self.players_info["chat_id"], gif_lynching,
                         caption=f'*@{mafia.user_profile.username} was lynched!*', parse_mode="Markdown"
                     )
+                    gif_lynching.close()
+                    gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
                     await bot.send_animation(
                         mafia.user_profile.id, gif_direct_lynching, caption=YOU_LYNCHED, parse_mode="Markdown"
                     )
+                    gif_direct_lynching.close()
                     self.mafia_players.remove(mafia)
             await self.end_game_check()
 
         else:
+            gif_none_lynched = open('Other/no_one_lynched.gif', 'rb')
             await bot.send_animation(
                 self.players_info["chat_id"], gif_none_lynched, caption=DIVERSITY_STR, parse_mode="Markdown"
             )
+            gif_none_lynched.close()
         lynch_dict.clear()
         self.lynch.clear()
 
@@ -163,11 +185,13 @@ class Games:
         """
         Function for performing night actions
         """
+        gif_sunset = open('Other/sunset.gif', 'rb')
         self.night_kill = 0
         await bot.send_animation(
             self.players_info["chat_id"], gif_sunset, caption=NIGHT_START,
             reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown"
         )
+        gif_sunset.close()
 
         if str(self.doc_id) == self.doctor_heal:
             self.treat_yourself = True
@@ -253,12 +277,14 @@ class Games:
                 await bot.send_message(civilian.user_profile.id, YOU_KILLED, parse_mode="Markdown")
                 self.civilian_players.remove(civilian)
                 self.night_kill = civilian
+                await self.end_game_check()
 
         for mafia in self.mafia_players:
             if str(mafia.user_profile.id) == dead and not str(self.doctor_heal) == dead:
                 await bot.send_message(mafia.user_profile.id, YOU_KILLED, parse_mode="Markdown")
                 self.mafia_players.remove(mafia)
                 self.night_kill = mafia
+                await self.end_game_check()
 
     async def cherif_night(self):
         """ Function that tells the mafia sheriff whether the player he has chosen for checking or not """

@@ -12,7 +12,6 @@ players_joined = {}
 game_number = {}
 
 
-
 def admin_permissions_check(bot_permission):
     """ function to check if bot has enough permissions to moderate the chat while games"""
     return bot_permission['status'] == "administrator" and bot_permission["can_manage_chat"] \
@@ -40,34 +39,40 @@ async def update_data(users, user):
 @dp.message_handler(commands=['game'])
 async def registration(message: types.Message):
     """ function for registering players and perform game """
-    global is_registration
 
-    if message.chat.id < 0 and is_registration and await check_admin(message.chat.id, bot.id):
+    if message.chat.id not in game_number.keys():
+        game_number[message.chat.id] = {}
+        game_number[message.chat.id]["is_registration"] = True
+
+    if message.chat.id < 0 and game_number[message.chat.id]["is_registration"] and await check_admin(message.chat.id, bot.id):
         global players_joined
         await message.reply(REGISTRATION_START_STR, reply_markup=markup.inline_keyboard_join)
         players_joined["chat_id"] = message.chat.id
-        players_joined["players"] = []
-        players_joined["time_remaining"] = 60
-        is_registration = False
+        players_joined[message.chat.id] = {}
+        players_joined[message.chat.id]["players"] = []
+        players_joined[message.chat.id]["time_remaining"] = 60
+
+
+        game_number[message.chat.id]["is_registration"] = False
 
         await bot.send_message(message.chat.id, FIRST_NOTIFY_REGISTRATION_END)
-        while players_joined["time_remaining"] > 0:
-            players_joined["time_remaining"] -= 1
-            if players_joined["time_remaining"] == 30:
+        while players_joined[message.chat.id]["time_remaining"] > 0:
+            players_joined[message.chat.id]["time_remaining"] -= 1
+            if players_joined[message.chat.id]["time_remaining"] == 30:
                 await bot.send_message(message.chat.id, SECOND_NOTIFY_REGISTRATION_END)
-            if len(players_joined["players"]) >= 13:
-                players_joined["time_remaining"] = 0
+            if len(players_joined[message.chat.id]["players"]) >= 13:
+                players_joined[message.chat.id]["time_remaining"] = 0
             await asyncio.sleep(1)
         await bot.send_message(message.chat.id, REGISTRATION_END_STR)
-        if len(players_joined["players"]) < MIN_PLAYERS:
+        if len(players_joined[message.chat.id]["players"]) < MIN_PLAYERS:
             await bot.send_message(message.chat.id, NOT_ENOUGH_STR)
             players_joined.clear()
-            is_registration = True
+            game_number[message.chat.id]["is_registration"] = True
         else:
             await bot.send_message(message.chat.id, GAME_START_STR, parse_mode="Markdown")
             with open('users.json', 'r') as f:
                 users = json.load(f)
-            for user in players_joined["players"]:
+            for user in players_joined[message.chat.id]["players"]:
                 await update_data(users, user)
                 users[str(user.id)]["Games played"] += 1
             with open('users.json', 'w') as f:
@@ -75,14 +80,15 @@ async def registration(message: types.Message):
             game_number[str(message.chat.id)] = Games(players_joined, message.chat.id)
             await game_number[str(message.chat.id)].give_roles()
 
-            #informs the mafia about his allies (other mafias)
+            # informs the mafia about his allies (other mafias)
             for mafia in game_number[str(message.chat.id)].mafia_players:
                 await bot.send_message(mafia.user_profile.id, ALLIES_STR +
                                        "\n@".join(map(str, (x.user_profile.username + "- 🤵🏼 Mafia" for x in
                                                             game_number[str(message.chat.id)].mafia_players)))
-                )
+                                       )
 
-            #start game
+            # start game
+
             while game_number[str(message.chat.id)].game:
                 await game_number[str(message.chat.id)].night()
 
@@ -93,7 +99,11 @@ async def registration(message: types.Message):
                     await asyncio.sleep(1)
                 await game_number[str(message.chat.id)].mafia_kill()
                 await game_number[str(message.chat.id)].cherif_night()
+                if not game_number[str(message.chat.id)].game:
+
+                    break
                 await game_number[str(message.chat.id)].day()
+
                 timer = 120
                 while len(game_number[str(message.chat.id)].lynch) < \
                         len(game_number[str(message.chat.id)].civilian_players) + \
@@ -107,11 +117,12 @@ async def registration(message: types.Message):
                     await asyncio.sleep(1)
                     timer -= 1
                 await game_number[str(message.chat.id)].lynched()
-            is_registration = True
+            game_number[message.chat.id]["is_registration"] = True
 
 
 async def handlers_call():
     """function to call handlers in game"""
+
     @dp.message_handler()
     async def chat_moderating(mes: types.Message):
         """ handles and deletes messages of users who are not playing or of players who write during the night """
@@ -173,9 +184,10 @@ async def editing_message(games, callback_data, dicts):
 @dp.callback_query_handler(text="+30s")
 async def timer_extend(call: types.CallbackQuery):
     """ function to add 30 seconds to timer during the registration"""
-    if len(players_joined["players"]) > 1:
-        players_joined["time_remaining"] += 30
-        await bot.send_message(call.message.chat.id, EXTEND_TIMER_STR + f"{players_joined['time_remaining']}.")
+    if len(players_joined[players_joined['chat_id']]["players"]) > 1:
+        players_joined[players_joined['chat_id']]["time_remaining"] += 30
+        await bot.send_message(call.message.chat.id,
+                               EXTEND_TIMER_STR + f"{players_joined[players_joined['chat_id']]['time_remaining']}.")
     else:
         await bot.send_message(call.message.chat.id, EXTEND_TIMER_CONDITION_STR)
 
@@ -186,23 +198,27 @@ async def send_welcome_message(message: types.Message):
     if message.chat.id > 0:
         if message.get_args() == 'a':
 
-            if players_joined["time_remaining"] == 0:
+
+            if players_joined[players_joined['chat_id']]["time_remaining"] == 0:
                 await bot.send_message(message.from_user.id, NO_REGISTRATION_STR)
-            elif message.from_user in players_joined["players"]:
+            elif message.from_user in players_joined[players_joined['chat_id']]["players"]:
                 await bot.send_message(message.from_user.id, ALREADY_REGISTERED_STR)
             else:
                 await bot.send_message(message.from_user.id, REGISTRATION_DONE)
-                players_joined["players"].append(message.from_user)
-########################################################################################################################
+                players_joined[players_joined['chat_id']]["players"].append(message.from_user)
+                ########################################################################################################################
                 global note
-                if len(players_joined["players"]) == 1:
+                if len(players_joined[players_joined['chat_id']]["players"]) == 1:
                     note = await bot.send_message(
                         players_joined["chat_id"], REGISTRATION_IN_PROGRESS +
-                                                   '\n@'.join(map(str, (x.username for x in players_joined["players"])))
+                                                   '\n@'.join(map(str, (x.username for x in
+                                                                        players_joined[players_joined['chat_id']][
+                                                                            "players"])))
                     )
                 else:
                     await note.edit_text(
-                        REGISTRATION_IN_PROGRESS + '\n@'.join(map(str, (x.username for x in players_joined["players"])))
+                        REGISTRATION_IN_PROGRESS + '\n@'.join(
+                            map(str, (x.username for x in players_joined[players_joined['chat_id']]["players"])))
                     )
         else:
             await bot.send_message(message.from_user.id,
@@ -217,8 +233,8 @@ async def send_welcome_message(message: types.Message):
                 await asyncio.sleep(5)
                 await error.delete()
 
-            elif len(players_joined["players"]) >= 4:
-                players_joined["time_remaining"] = 0
+            elif len(players_joined[players_joined['chat_id']]["players"]) >= 4:
+                players_joined[players_joined['chat_id']]["time_remaining"] = 0
             else:
                 error = await bot.send_message(message.chat.id, MIN_PLAYERS_STR)
                 await asyncio.sleep(10)
@@ -234,8 +250,8 @@ async def creating_buttons(call: types.CallbackQuery):
         users = json.load(f)
     await bot.send_message(call.from_user.id, f"👤*{call.from_user.first_name if call.from_user.first_name else ''} "
                                               f"{call.from_user.last_name if call.from_user.last_name else ''}*"
-                                              f"\n\nGames played: {users[str(call.from_user.id)]['Games played'] }"
-                                              f"\nGames won: {users[str(call.from_user.id)]['Games won'] }",
+                                              f"\n\nGames played: {users[str(call.from_user.id)]['Games played']}"
+                                              f"\nGames won: {users[str(call.from_user.id)]['Games won']}",
                            reply_markup=markup.inline_keyboard_back, parse_mode="Markdown")
 
 

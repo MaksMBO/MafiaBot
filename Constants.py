@@ -1,11 +1,11 @@
 """Gif files for the game"""
-gif_sunrise = open('Other/sunrise.gif', 'rb')
-gif_kill = open('Other/Mafia_kill.gif', 'rb')
-gif_do_not_kill = open('Other/mafia_dont_kill.gif', 'rb')
-gif_sunset = open('Other/sunset.gif', 'rb')
-gif_none_lynched = open('Other/no_one_lynched.gif', 'rb')
-gif_lynching = open('Other/lynching.gif', 'rb')
-gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
+# gif_sunrise = open('Other/sunrise.gif', 'rb')
+# gif_kill = open('Other/Mafia_kill.gif', 'rb')
+# gif_do_not_kill = open('Other/mafia_dont_kill.gif', 'rb')
+# gif_sunset = open('Other/sunset.gif', 'rb')
+# gif_none_lynched = open('Other/no_one_lynched.gif', 'rb')
+# gif_lynching = open('Other/lynching.gif', 'rb')
+# gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
 
 
 """Constants in the game"""
@@ -28,7 +28,7 @@ REGISTRATION_DONE = "You have registered in the game, wait for the start✅"
 ALREADY_REGISTERED_STR = "You are already registered, just wait⌛️"
 NO_REGISTRATION_STR = "There is no game registered"
 FIRST_NOTIFY_REGISTRATION_END = "Time until the end of registration 60 seconds"
-SECOND_NOTIFY_REGISTRATION_END = "Time until the end of registration 60 seconds"
+SECOND_NOTIFY_REGISTRATION_END = "Time until the end of registration 30 seconds"
 NOT_ENOUGH_STR = "Not enough players to start the game..."
 MIN_PLAYERS_STR = "A minimum of four users must be registered to stop the timer"
 GAME_START_STR = "*GAME IS STARTED*"
