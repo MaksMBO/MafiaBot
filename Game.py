@@ -7,26 +7,8 @@ class Games:
 
     def __init__(self, players_info, number_game):
         """Constructor of the Game class
-        :param self.players_info
-        :param self.players_roles
-        :param self.game
-        :param self.mafia_players
-        :param self.civilian_players
-        :param self.kill_mafia
-        :param self.doctor_heal
-        :param self.cherif_check
-        :param self.treat_yourself
-        :param self.doc_id
-        :param self.cherif_id
-        :param self.end_night
-        :param self.message_mafia
-        :param self.night_kill
-        :param self.lynch
-        :param self.message
-        :param self.role_dict
-        :param self.players_dict
-        :param self.day_counter
-        :param self.number_game
+        :param players_info
+        :param number_game
 
         """
         self.players_info = players_info
