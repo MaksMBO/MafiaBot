@@ -21,9 +21,9 @@ class Civilian:
 
     async def send_message(self):
         """ Sends a message to the civilians to inform them of their role """
-        await bot.send_message(self.user_profile.id, "*You are a 👨🏼 Civilian.*\n"
+        await bot.send_message(self.user_profile.id, "<b>You are a 👨🏼 Civilian.</b>\n"
                                                      "Your task is to find the mafia and lynch the murderers "
-                                                     "at the city meeting!", parse_mode="Markdown")
+                                                     "at the city meeting!", parse_mode="HTML")
 
 
 class Mafia(Civilian):
@@ -32,9 +32,9 @@ class Mafia(Civilian):
 
     async def send_message(self):
         """ Sends a message to the mafia to inform them of their role """
-        await bot.send_message(self.user_profile.id, "*You are 🤵🏼 Mafia!*\n"
+        await bot.send_message(self.user_profile.id, "<b>You are 🤵🏼 Mafia!</b>\n"
                                                      "Your task is to obey Don and kill everyone who stands "
-                                                     "in your way.", parse_mode="Markdown")
+                                                     "in your way.", parse_mode="HTML")
 
 
 class Medic(Civilian):
@@ -43,9 +43,9 @@ class Medic(Civilian):
 
     async def send_message(self):
         """ Sends a message to the Doctor to inform him of his role """
-        await bot.send_message(self.user_profile.id, "*You are 👨🏼‍⚕️ Doctor!*\n"
+        await bot.send_message(self.user_profile.id, "<b>You are 👨🏼‍⚕️ Doctor!</b>\n"
                                                      "You decide who to save tonight ...",
-                               parse_mode="Markdown")
+                               parse_mode="HTML")
 
 
 class Police(Civilian):
@@ -54,6 +54,6 @@ class Police(Civilian):
 
     async def send_message(self):
         """ Sends a message to the Commissioner Cattani to inform him of his role """
-        await bot.send_message(self.user_profile.id, "*You are 🕵🏼‍♂️ Commissioner Cattani!*\n"
+        await bot.send_message(self.user_profile.id, "<b>You are 🕵🏼‍♂️ Commissioner Cattani!</b>\n"
                                                      "The main city protector and the thunderstorm of "
-                                                     "the mafia ...", parse_mode="Markdown")
+                                                     "the mafia ...", parse_mode="HTML")

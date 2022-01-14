@@ -70,7 +70,7 @@ class Games:
         gif_sunrise = open('Other/sunrise.gif', 'rb')
         await bot.send_animation(
             self.players_info["chat_id"], gif_sunrise,
-            caption=f"*🏙 Day {self.day_counter}*\n" + DAY_START, parse_mode="Markdown"
+            caption=f"<b>🏙 Day {self.day_counter}</b>\n" + DAY_START, parse_mode="HTML"
         )
         gif_sunrise.close()
 
@@ -79,17 +79,17 @@ class Games:
             gif_kill = open('Other/Mafia_kill.gif', 'rb')
             await bot.send_animation(
                 self.players_info["chat_id"], gif_kill,
-                caption=f'*{self.night_kill.user_profile.first_name if self.night_kill.user_profile.first_name else ""}'
-                        f' {self.night_kill.user_profile.last_name if self.night_kill.user_profile.last_name else ""}* '
+                caption=f'<b>{self.night_kill.user_profile.first_name if self.night_kill.user_profile.first_name else ""}'
+                        f' {self.night_kill.user_profile.last_name if self.night_kill.user_profile.last_name else ""}</b> '
                         f'was killed that night',
-                parse_mode="Markdown"
+                parse_mode="HTML"
             )
             gif_kill.close()
 
         else:
             gif_do_not_kill = open('Other/mafia_dont_kill.gif', 'rb')
             await bot.send_animation(
-                self.players_info["chat_id"], gif_do_not_kill, caption=NO_ONE_KILLED, parse_mode="Markdown"
+                self.players_info["chat_id"], gif_do_not_kill, caption=NO_ONE_KILLED, parse_mode="HTML"
             )
             gif_do_not_kill.close()
 
@@ -121,12 +121,12 @@ class Games:
                     gif_lynching = open('Other/lynching.gif', 'rb')
                     await bot.send_animation(
                         self.players_info["chat_id"], gif_lynching,
-                        caption=f'*@{civilian.user_profile.username} was lynched!*', parse_mode="Markdown"
+                        caption=f'<b>@{civilian.user_profile.username} was lynched!</b>', parse_mode="HTML"
                     )
                     gif_lynching.close()
                     gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
                     await bot.send_animation(
-                        civilian.user_profile.id, gif_direct_lynching, caption=YOU_LYNCHED, parse_mode="Markdown"
+                        civilian.user_profile.id, gif_direct_lynching, caption=YOU_LYNCHED, parse_mode="HTML"
                     )
                     gif_direct_lynching.close()
                     self.civilian_players.remove(civilian)
@@ -135,12 +135,12 @@ class Games:
                     gif_lynching = open('Other/lynching.gif', 'rb')
                     await bot.send_animation(
                         self.players_info["chat_id"], gif_lynching,
-                        caption=f'*@{mafia.user_profile.username} was lynched!*', parse_mode="Markdown"
+                        caption=f'<b>@{mafia.user_profile.username} was lynched!</b>', parse_mode="HTML"
                     )
                     gif_lynching.close()
                     gif_direct_lynching = open('Other/lynched_message.gif', 'rb')
                     await bot.send_animation(
-                        mafia.user_profile.id, gif_direct_lynching, caption=YOU_LYNCHED, parse_mode="Markdown"
+                        mafia.user_profile.id, gif_direct_lynching, caption=YOU_LYNCHED, parse_mode="HTML"
                     )
                     gif_direct_lynching.close()
                     self.mafia_players.remove(mafia)
@@ -149,7 +149,7 @@ class Games:
         else:
             gif_none_lynched = open('Other/no_one_lynched.gif', 'rb')
             await bot.send_animation(
-                self.players_info["chat_id"], gif_none_lynched, caption=DIVERSITY_STR, parse_mode="Markdown"
+                self.players_info["chat_id"], gif_none_lynched, caption=DIVERSITY_STR, parse_mode="HTML"
             )
             gif_none_lynched.close()
         lynch_dict.clear()
@@ -159,7 +159,7 @@ class Games:
         """ Displays a vote of who to lynch """
         for person in role:
             self.message = await bot.send_message(
-                person.user_profile.id, LYNCHING, reply_markup=buttons, parse_mode="Markdown"
+                person.user_profile.id, LYNCHING, reply_markup=buttons, parse_mode="HTML"
             )
             self.players_dict[person.user_profile.id] = self.message
 
@@ -171,7 +171,7 @@ class Games:
         self.night_kill = 0
         await bot.send_animation(
             self.players_info["chat_id"], gif_sunset, caption=NIGHT_START,
-            reply_markup=markup.inline_keyboard_bot, parse_mode="Markdown"
+            reply_markup=markup.inline_keyboard_bot, parse_mode="HTML"
         )
         gif_sunset.close()
 
@@ -202,7 +202,7 @@ class Games:
             mafia.buttons("Doctor", self.number_game)
             keyboard_doctor.add(mafia.button)
             self.message_mafia = await bot.send_message(
-                mafia.user_profile.id, MAFIA_KILL_STR, reply_markup=keyboard_mafia, parse_mode="Markdown"
+                mafia.user_profile.id, MAFIA_KILL_STR, reply_markup=keyboard_mafia, parse_mode="HTML"
             )
             self.role_dict[mafia.user_profile.id] = self.message_mafia
 
@@ -210,13 +210,13 @@ class Games:
             if isinstance(civilian, Police):
                 self.cherif_id = civilian.user_profile.id
                 self.message_cherif = await bot.send_message(
-                    civilian.user_profile.id, POLICE_CHECK_STR, reply_markup=keyboard_cherif, parse_mode="Markdown"
+                    civilian.user_profile.id, POLICE_CHECK_STR, reply_markup=keyboard_cherif, parse_mode="HTML"
                 )
                 self.role_dict[civilian.user_profile.id] = self.message_cherif
             if isinstance(civilian, Medic):
                 self.doc_id = civilian.user_profile.id
                 self.message_doc = await bot.send_message(
-                    civilian.user_profile.id, MEDIC_HEAL_STR, reply_markup=keyboard_doctor, parse_mode="Markdown"
+                    civilian.user_profile.id, MEDIC_HEAL_STR, reply_markup=keyboard_doctor, parse_mode="HTML"
                 )
                 self.role_dict[civilian.user_profile.id] = self.message_doc
 
@@ -241,11 +241,11 @@ class Games:
     async def end_game_check(self):
         """ Function for checking if the game is over """
         if not self.mafia_players:
-            await bot.send_message(self.players_info["chat_id"], CIVILIANS_WON_STR, parse_mode="Markdown")
+            await bot.send_message(self.players_info["chat_id"], CIVILIANS_WON_STR, parse_mode="HTML")
             await self.add_win(self.civilian_players)
             self.game = False
         if len(self.mafia_players) == len(self.civilian_players):
-            await bot.send_message(self.players_info["chat_id"], MAFIA_WON_STR, parse_mode="Markdown")
+            await bot.send_message(self.players_info["chat_id"], MAFIA_WON_STR, parse_mode="HTML")
             await self.add_win(self.mafia_players)
             self.game = False
 
@@ -256,14 +256,14 @@ class Games:
         dead = random.choice(self.kill_mafia)
         for civilian in self.civilian_players:
             if str(civilian.user_profile.id) == dead and not str(self.doctor_heal) == dead:
-                await bot.send_message(civilian.user_profile.id, YOU_KILLED, parse_mode="Markdown")
+                await bot.send_message(civilian.user_profile.id, YOU_KILLED, parse_mode="HTML")
                 self.civilian_players.remove(civilian)
                 self.night_kill = civilian
                 await self.end_game_check()
 
         for mafia in self.mafia_players:
             if str(mafia.user_profile.id) == dead and not str(self.doctor_heal) == dead:
-                await bot.send_message(mafia.user_profile.id, YOU_KILLED, parse_mode="Markdown")
+                await bot.send_message(mafia.user_profile.id, YOU_KILLED, parse_mode="HTML")
                 self.mafia_players.remove(mafia)
                 self.night_kill = mafia
                 await self.end_game_check()

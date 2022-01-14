@@ -69,7 +69,7 @@ async def registration(message: types.Message):
             players_joined.clear()
             game_number[message.chat.id]["is_registration"] = True
         else:
-            await bot.send_message(message.chat.id, GAME_START_STR, parse_mode="Markdown")
+            await bot.send_message(message.chat.id, GAME_START_STR, parse_mode="HTML")
             with open('users.json', 'r') as f:
                 users = json.load(f)
             for user in players_joined[message.chat.id]["players"]:
@@ -140,7 +140,7 @@ async def handlers_call():
         await editing_message(game_number[callback_data['id_game']], callback_data,
                               game_number[callback_data['id_game']].role_dict[call.from_user.id])
         await bot.send_message(
-            players_joined['chat_id'], '*Mafia loaded weapons*', parse_mode="Markdown"
+            players_joined['chat_id'], '<b>Mafia loaded weapons</b>', parse_mode="HTML"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Doctor"))
@@ -150,7 +150,7 @@ async def handlers_call():
         await editing_message(game_number[callback_data['id_game']], callback_data,
                               game_number[callback_data['id_game']].role_dict[call.from_user.id])
         await bot.send_message(
-            players_joined['chat_id'], '*The doctor went out on night duty*', parse_mode="Markdown"
+            players_joined['chat_id'], '<b>The doctor went out on night duty</b>', parse_mode="HTML"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Cherif"))
@@ -160,7 +160,7 @@ async def handlers_call():
         await editing_message(game_number[callback_data['id_game']], callback_data,
                               game_number[callback_data['id_game']].role_dict[call.from_user.id])
         await bot.send_message(
-            players_joined['chat_id'], '*The Commissioner went to look for the guilty*', parse_mode="Markdown"
+            players_joined['chat_id'], '<b>The Commissioner went to look for the guilty</b>', parse_mode="HTML"
         )
 
     @dp.callback_query_handler(markup.cb.filter(button_for="Day"))
@@ -248,11 +248,11 @@ async def creating_buttons(call: types.CallbackQuery):
     await call.message.delete()
     with open('users.json', 'r') as f:
         users = json.load(f)
-    await bot.send_message(call.from_user.id, f"👤*{call.from_user.first_name if call.from_user.first_name else ''} "
-                                              f"{call.from_user.last_name if call.from_user.last_name else ''}*"
+    await bot.send_message(call.from_user.id, f"👤<b>{call.from_user.first_name if call.from_user.first_name else ''} "
+                                              f"{call.from_user.last_name if call.from_user.last_name else ''}</b>"
                                               f"\n\nGames played: {users[str(call.from_user.id)]['Games played']}"
                                               f"\nGames won: {users[str(call.from_user.id)]['Games won']}",
-                           reply_markup=markup.inline_keyboard_back, parse_mode="Markdown")
+                           reply_markup=markup.inline_keyboard_back, parse_mode="HTML")
 
 
 @dp.callback_query_handler(text="Help")
